@@ -58,7 +58,7 @@ def imgdownload(url, filename):
     return
 
 #%% parameters
-# lat, lon bounding box
+# latitude, longitude bounding box
 min_lat = 29.5
 max_lat = 30.2
 min_lon = -96.0
@@ -191,8 +191,8 @@ supertile_overlay = numpy.minimum.reduce([supertile_overlay, numpy.ones(supertil
 supertile_overlay = numpy.maximum.reduce([supertile_overlay, numpy.zeros(supertile_size)])
 
 # save new tile
-matplotlib.pyplot.imsave('data_color.png', data_color)
-matplotlib.pyplot.imsave('supertile_overlay.png', supertile_overlay)
+matplotlib.pyplot.imsave('heatmap_data.png', data_color)
+matplotlib.pyplot.imsave('heatmap.png', supertile_overlay)
 
 # plot new tile
 matplotlib.pyplot.figure(1)
