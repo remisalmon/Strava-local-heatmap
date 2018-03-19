@@ -76,7 +76,6 @@ colormap = 'plasma' # matplotlib colormap
 
 # find gpx file
 gpx_files = glob.glob('gpx/*.gpx')
-#gpx_files = glob.glob('gpx/all/*.gpx')
 
 # read gpx lat,lon data
 lat_lon_data = []
@@ -164,15 +163,9 @@ for k in range(len(lat_lon_data)):
     data[i-1:i+1, j-1:j+1] = 1
 
 # data points convolution with Gaussian kernel
-#tile_resolution = 156543.03*math.cos(math.radians(numpy.mean(lat_lon_data[:,0])))/(2**zoom) # meters/pixel
-
-#sigma = tile_resolution/sigma_scale
 sigma = sigma_scale
 
 data = skimage.filters.gaussian(data, sigma)
-
-# normalize data points
-#data = data/numpy.max(data)
 
 # colorize data points
 cmap = matplotlib.pyplot.get_cmap(colormap)
@@ -190,11 +183,11 @@ for c in range(3):
 supertile_overlay = numpy.minimum.reduce([supertile_overlay, numpy.ones(supertile_size)])
 supertile_overlay = numpy.maximum.reduce([supertile_overlay, numpy.zeros(supertile_size)])
 
-# save new tile
+# save images
 matplotlib.pyplot.imsave('heatmap_data.png', data_color)
 matplotlib.pyplot.imsave('heatmap.png', supertile_overlay)
 
-# plot new tile
+# plot images
 matplotlib.pyplot.figure(1)
 matplotlib.pyplot.imshow(data_color)
 
