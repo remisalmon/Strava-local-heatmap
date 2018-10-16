@@ -184,7 +184,7 @@ supertile_overlay = numpy.minimum.reduce([supertile_overlay, numpy.ones(supertil
 supertile_overlay = numpy.maximum.reduce([supertile_overlay, numpy.zeros(supertile_size)])
 
 # save images
-matplotlib.pyplot.imsave('heatmap_data.png', data_color)
+#matplotlib.pyplot.imsave('heatmap_data.png', data_color)
 matplotlib.pyplot.imsave('heatmap.png', supertile_overlay)
 
 # plot images
