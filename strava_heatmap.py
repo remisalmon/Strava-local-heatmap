@@ -58,15 +58,9 @@ def imgdownload(url, filename):
     return
 
 #%% parameters
-# latitude, longitude bounding box
-#min_lat = 29.5
-#max_lat = 30.2
-#min_lon = -96.0
-#max_lon = -95.0
-
 zoom = 10 # OSM zoom level
 
-tile_offset = 0 # extra tiles around map
+tile_offset = 0 # number of extra tiles on edges
 
 sigma_pixels = 1.5 # heatmap Gaussian kernel sigma (in pixels)
 
@@ -91,7 +85,6 @@ for i in range(len(gpx_files)):
                 lat = float(tmp[0])
                 lon = float(tmp[1])
                 
-                #if min_lat < lat < max_lat and min_lon < lon < max_lon:                
                 lat_lon_data.append([lat, lon])
 
 lat_lon_data = numpy.array(lat_lon_data)
@@ -128,9 +121,6 @@ for x in range(x_tile_min, x_tile_max+1):
             imgdownload(tile_url, tile_filename)
 
 # read test tile
-#tile_filename = 'tiles/tile_'+str(zoom)+'_'+str(x_tile_min)+'_'+str(y_tile_min)+'.png'
-#tile = matplotlib.pyplot.imread(tile_filename)
-#tile_size = numpy.shape(tile)
 tile_size = [256, 256] # OSM default
 
 # create supertile
@@ -168,9 +158,7 @@ for k in range(len(lat_lon_data)):
     i = i+(xy_tiles[k, 1]-y_tile_min)*tile_size[0]
     j = j+(xy_tiles[k, 0]-x_tile_min)*tile_size[1]
      
-    #data[i, j] = data[i, j]+1
-    #data[i, j] = 1
-    data[i-1:i+1, j-1:j+1] = 1
+    data[i-1:i+1, j-1:j+1] = 1 # GPX trackpoint is 3x3 pixels
 
 # data points convolution with Gaussian kernel + normalization
 data = skimage.filters.gaussian(data, sigma_pixels)
@@ -193,8 +181,4 @@ supertile_overlay = numpy.minimum.reduce([supertile_overlay, numpy.ones(supertil
 supertile_overlay = numpy.maximum.reduce([supertile_overlay, numpy.zeros(supertile_size)])
 
 # save images
-#matplotlib.pyplot.imsave('heatmap_data.png', data_color)
 matplotlib.pyplot.imsave('heatmap.png', supertile_overlay)
-
-# plot image
-#matplotlib.pyplot.imshow(supertile_overlay)
