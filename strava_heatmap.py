@@ -59,16 +59,16 @@ def imgdownload(url, filename):
 
 #%% parameters
 # latitude, longitude bounding box
-min_lat = 29.5
-max_lat = 30.2
-min_lon = -96.0
-max_lon = -95.0
+#min_lat = 29.5
+#max_lat = 30.2
+#min_lon = -96.0
+#max_lon = -95.0
 
-zoom = 12 # OSM zoom level
+zoom = 10 # OSM zoom level
 
 tile_offset = 0 # extra tiles around map
 
-sigma_scale = 1.5 # heatmap Gaussian kernel sigma
+sigma_pixels = 1.5 # heatmap Gaussian kernel sigma (in pixels)
 
 colormap = 'plasma' # matplotlib colormap
 
@@ -79,6 +79,7 @@ gpx_files = glob.glob('gpx/*.gpx')
 
 # read gpx lat,lon data
 lat_lon_data = []
+
 for i in range(len(gpx_files)):
     file = open(gpx_files[i], 'r')
     
@@ -90,8 +91,8 @@ for i in range(len(gpx_files)):
                 lat = float(tmp[0])
                 lon = float(tmp[1])
                 
-                if min_lat < lat < max_lat and min_lon < lon < max_lon:                
-                    lat_lon_data.append([lat, lon])
+                #if min_lat < lat < max_lat and min_lon < lon < max_lon:                
+                lat_lon_data.append([lat, lon])
 
 lat_lon_data = numpy.array(lat_lon_data)
 
@@ -107,24 +108,33 @@ x_tile_max = max(xy_tiles[:, 0])+tile_offset
 y_tile_min = min(xy_tiles[:, 1])-tile_offset
 y_tile_max = max(xy_tiles[:, 1])+tile_offset
 
+# check area size
+tile_count = (x_tile_max-x_tile_min+1)*(y_tile_max-y_tile_min+1)
+if tile_count > 100:
+    print('area too large, reduce zoom or check GPX files')
+    quit()
+
 # download tiles
+i = 0
 for x in range(x_tile_min, x_tile_max+1):
     for y in range(y_tile_min, y_tile_max+1):
-        tile_url = 'https://maps.wikimedia.org/OSM-intl/'+str(zoom)+'/'+str(x)+'/'+str(y)+'.png'
+        tile_url = 'https://maps.wikimedia.org/osm-intl/'+str(zoom)+'/'+str(x)+'/'+str(y)+'.png'
         tile_filename = 'tiles/tile_'+str(zoom)+'_'+str(x)+'_'+str(y)+'.png'
         
         if len(glob.glob(tile_filename)) == 0:
-            print('downloading tile '+str(x)+','+str(y)+'...')
+            i = i+1
+            print('downloading tile '+str(i)+'/'+str(tile_count)+'...')
             
             imgdownload(tile_url, tile_filename)
 
 # read test tile
-tile_filename = 'tiles/tile_'+str(zoom)+'_'+str(x_tile_min)+'_'+str(y_tile_min)+'.png'
-tile = matplotlib.pyplot.imread(tile_filename)
-tile_size = numpy.shape(tile)
+#tile_filename = 'tiles/tile_'+str(zoom)+'_'+str(x_tile_min)+'_'+str(y_tile_min)+'.png'
+#tile = matplotlib.pyplot.imread(tile_filename)
+#tile_size = numpy.shape(tile)
+tile_size = [256, 256] # OSM default
 
 # create supertile
-supertile_size = (math.floor(y_tile_max-y_tile_min+1)*tile_size[0], math.floor((x_tile_max-x_tile_min+1)*tile_size[1]), 3)
+supertile_size = [math.floor(y_tile_max-y_tile_min+1)*tile_size[0], math.floor((x_tile_max-x_tile_min+1)*tile_size[1]), 3]
 
 supertile = numpy.zeros(supertile_size)
 
@@ -136,7 +146,7 @@ for x in range(x_tile_min, x_tile_max+1):
         
         i = y-y_tile_min
         j = x-x_tile_min
-        supertile[i*tile_size[0]:i*tile_size[0]+tile_size[0], j*tile_size[1]:j*tile_size[1]+tile_size[1], :] = tile[:, :, 0:3]
+        supertile[i*tile_size[0]:i*tile_size[0]+tile_size[0], j*tile_size[1]:j*tile_size[1]+tile_size[1], :] = tile
         
 # supertile to grayscale
 supertile = skimage.color.gray2rgb(skimage.color.rgb2gray(supertile))
@@ -145,7 +155,7 @@ supertile = skimage.color.gray2rgb(skimage.color.rgb2gray(supertile))
 supertile = 1-supertile
 
 # fill data points
-data_size = (supertile_size[0], supertile_size[1])
+data_size = supertile_size[0:2]
 
 data = numpy.zeros(data_size)
 
@@ -162,10 +172,9 @@ for k in range(len(lat_lon_data)):
     #data[i, j] = 1
     data[i-1:i+1, j-1:j+1] = 1
 
-# data points convolution with Gaussian kernel
-sigma = sigma_scale
-
-data = skimage.filters.gaussian(data, sigma)
+# data points convolution with Gaussian kernel + normalization
+data = skimage.filters.gaussian(data, sigma_pixels)
+data = (data-data.min())/(data.max()-data.min())
 
 # colorize data points
 cmap = matplotlib.pyplot.get_cmap(colormap)
@@ -187,9 +196,5 @@ supertile_overlay = numpy.maximum.reduce([supertile_overlay, numpy.zeros(superti
 #matplotlib.pyplot.imsave('heatmap_data.png', data_color)
 matplotlib.pyplot.imsave('heatmap.png', supertile_overlay)
 
-# plot images
-matplotlib.pyplot.figure(1)
-matplotlib.pyplot.imshow(data_color)
-
-matplotlib.pyplot.figure(2)
-matplotlib.pyplot.imshow(supertile_overlay)
+# plot image
+#matplotlib.pyplot.imshow(supertile_overlay)

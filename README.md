@@ -10,6 +10,5 @@
 
 ## ToDo:
 
-* Automatic detection of bounding box coordinates
-* Kernel sigma estimation based on zoom level
 * Calculate trackpoints speed + modulation with elevation gradient
+
