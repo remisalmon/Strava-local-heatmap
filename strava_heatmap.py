@@ -17,7 +17,10 @@ http://scikit-image.org/
 https://www.findlatitudeandlongitude.com/
 """
 
+#!/usr/bin/env python3
+
 #%% librairies
+import sys
 import glob
 import time
 import re
@@ -27,6 +30,7 @@ import matplotlib
 import numpy
 import skimage.color
 import skimage.filters
+import skimage.io
 
 #%% functions
 
@@ -58,9 +62,13 @@ def imgdownload(url, filename):
     return
 
 #%% parameters
-zoom = 10 # OSM zoom level
+# latitude, longitude bounding box
+#min_lat = 29.5
+#max_lat = 30.2
+#min_lon = -96.0
+#max_lon = -95.0
 
-tile_offset = 0 # number of extra tiles on edges
+zoom = 12 # OSM zoom level
 
 sigma_pixels = 1.5 # heatmap Gaussian kernel sigma (in pixels)
 
@@ -85,6 +93,7 @@ for i in range(len(gpx_files)):
                 lat = float(tmp[0])
                 lon = float(tmp[1])
                 
+                #if min_lat < lat < max_lat and min_lon < lon < max_lon:                
                 lat_lon_data.append([lat, lon])
 
 lat_lon_data = numpy.array(lat_lon_data)
@@ -96,16 +105,16 @@ for i in range(len(xy_tiles)):
     xy_tiles[i, :] = deg2num(lat_lon_data[i, 0], lat_lon_data[i, 1], zoom)
 
 # find bounding OSM x,y tiles ID
-x_tile_min = min(xy_tiles[:, 0])-tile_offset
-x_tile_max = max(xy_tiles[:, 0])+tile_offset
-y_tile_min = min(xy_tiles[:, 1])-tile_offset
-y_tile_max = max(xy_tiles[:, 1])+tile_offset
+x_tile_min = min(xy_tiles[:, 0])
+x_tile_max = max(xy_tiles[:, 0])
+y_tile_min = min(xy_tiles[:, 1])
+y_tile_max = max(xy_tiles[:, 1])
 
 # check area size
 tile_count = (x_tile_max-x_tile_min+1)*(y_tile_max-y_tile_min+1)
 if tile_count > 100:
     print('area too large, reduce zoom or check GPX files')
-    quit()
+    sys.exit(1)
 
 # download tiles
 i = 0
@@ -132,22 +141,20 @@ supertile = numpy.zeros(supertile_size)
 for x in range(x_tile_min, x_tile_max+1):
     for y in range(y_tile_min, y_tile_max+1):
         tile_filename = 'tiles/tile_'+str(zoom)+'_'+str(x)+'_'+str(y)+'.png'
-        tile = matplotlib.pyplot.imread(tile_filename)
+        tile = skimage.io.imread(tile_filename) # uint8 data type
         
         i = y-y_tile_min
         j = x-x_tile_min
-        supertile[i*tile_size[0]:i*tile_size[0]+tile_size[0], j*tile_size[1]:j*tile_size[1]+tile_size[1], :] = tile
+        supertile[i*tile_size[0]:i*tile_size[0]+tile_size[0], j*tile_size[1]:j*tile_size[1]+tile_size[1], :] = skimage.img_as_float(tile)
         
 # supertile to grayscale
-supertile = skimage.color.gray2rgb(skimage.color.rgb2gray(supertile))
+supertile = skimage.color.gray2rgb(skimage.color.rgb2gray(supertile))   
 
 # invert supertile colors
 supertile = 1-supertile
 
 # fill data points
-data_size = supertile_size[0:2]
-
-data = numpy.zeros(data_size)
+data = numpy.zeros(supertile_size[0:2])
 
 for k in range(len(lat_lon_data)):
     (x, y) = deg2xy(lat_lon_data[k, 0], lat_lon_data[k, 1], zoom)
@@ -157,7 +164,7 @@ for k in range(len(lat_lon_data)):
     
     i = i+(xy_tiles[k, 1]-y_tile_min)*tile_size[0]
     j = j+(xy_tiles[k, 0]-x_tile_min)*tile_size[1]
-     
+    
     data[i-1:i+1, j-1:j+1] = 1 # GPX trackpoint is 3x3 pixels
 
 # data points convolution with Gaussian kernel + normalization
@@ -181,4 +188,6 @@ supertile_overlay = numpy.minimum.reduce([supertile_overlay, numpy.ones(supertil
 supertile_overlay = numpy.maximum.reduce([supertile_overlay, numpy.zeros(supertile_size)])
 
 # save images
-matplotlib.pyplot.imsave('heatmap.png', supertile_overlay)
+skimage.io.imsave('heatmap.png', supertile_overlay)
+
+sys.exit(0)
