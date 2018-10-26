@@ -70,6 +70,7 @@ def imgdownload(url, filename):
 
 zoom = 14 # OSM zoom level
 
+i_factor = 3 # OSM background map intensity reduction factor
 k_data = 6 # logistic function slope
 sigma_pixels = 1 # Gaussian kernel sigma (in pixels)
 
@@ -158,7 +159,7 @@ supertile = skimage.color.gray2rgb(supertile_gray)
 supertile = 1-supertile
 
 # reduce OSM map intensity
-supertile  = supertile/3
+supertile  = supertile/i_factor
 
 # fill trackpoints data
 data = numpy.zeros(supertile_size[0:2])
