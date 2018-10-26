@@ -17,8 +17,6 @@ http://scikit-image.org/
 https://www.findlatitudeandlongitude.com/
 """
 
-#!/usr/bin/env python3
-
 #%% librairies
 import sys
 import glob
@@ -68,7 +66,7 @@ def imgdownload(url, filename):
 #min_lon = -96.0
 #max_lon = -95.0
 
-zoom = 14 # OSM zoom level
+zoom = 13 # OSM zoom level
 
 i_factor = 3 # OSM background map intensity reduction factor
 k_data = 6 # logistic function slope
@@ -85,6 +83,8 @@ gpx_files = glob.glob('gpx/*.gpx')
 lat_lon_data = []
 
 for i in range(len(gpx_files)):
+    print('reading GPX file '+str(i+1)+'/'+str(len(gpx_files))+'...')
+    
     file = open(gpx_files[i], 'r')
     
     with open(gpx_files[i]) as file:
@@ -115,8 +115,8 @@ y_tile_max = max(xy_tiles[:, 1])
 # check area size
 tile_count = (x_tile_max-x_tile_min+1)*(y_tile_max-y_tile_min+1)
 if tile_count > 300:
-    print('area too large, reduce zoom or check GPX files\ntile_count = ',str(tile_count))
-    sys.exit(1)
+    print('area too large, reduce zoom or check GPX files\ntile_count = '+str(tile_count))
+    sys.exit('ERROR_tile_count')
 
 # download tiles
 i = 0
@@ -201,6 +201,5 @@ supertile_overlay = numpy.minimum.reduce([supertile_overlay, numpy.ones(supertil
 supertile_overlay = numpy.maximum.reduce([supertile_overlay, numpy.zeros(supertile_size)])
 
 # save images
+print('writing heatmap.png...')
 skimage.io.imsave('heatmap.png', supertile_overlay)
-
-sys.exit(0)
