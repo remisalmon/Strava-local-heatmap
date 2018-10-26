@@ -68,9 +68,10 @@ def imgdownload(url, filename):
 #min_lon = -96.0
 #max_lon = -95.0
 
-zoom = 12 # OSM zoom level
+zoom = 13 # OSM zoom level
 
-sigma_pixels = 1.5 # heatmap Gaussian kernel sigma (in pixels)
+k_data = 6 # logistic function slope
+sigma_pixels = 1 # Gaussian kernel sigma (in pixels)
 
 colormap = 'plasma' # matplotlib colormap
 
@@ -165,7 +166,12 @@ for k in range(len(lat_lon_data)):
     i = i+(xy_tiles[k, 1]-y_tile_min)*tile_size[0]
     j = j+(xy_tiles[k, 0]-x_tile_min)*tile_size[1]
     
-    data[i-1:i+1, j-1:j+1] = 1 # GPX trackpoint is 3x3 pixels
+    data[i-1:i+1, j-1:j+1] = data[i-1:i+1, j-1:j+1] + 1 # GPX trackpoint is 3x3 pixels
+    #data[i-1:i+1, j-1:j+1] = 1 # GPX trackpoint is 3x3 pixels
+
+# fix data accumulation with logistic function + normalization
+data = 1/(1+numpy.exp(-(1/k_data)*(data-0)))
+data = (data-data.min())/(data.max()-data.min())
 
 # data points convolution with Gaussian kernel + normalization
 data = skimage.filters.gaussian(data, sigma_pixels)
