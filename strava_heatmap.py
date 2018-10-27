@@ -10,7 +10,7 @@ https://support.strava.com/hc/en-us/articles/216918437-Exporting-your-Data-and-B
 http://wiki.openstreetmap.org/wiki/Slippy_map_tilenames
 http://wiki.openstreetmap.org/wiki/Tile_servers
 
-http://matplotlib.org/examples/color/colormaps_reference.html
+    http://matplotlib.org/examples/color/colormaps_reference.html
 
 http://scikit-image.org/
 
@@ -72,7 +72,7 @@ i_factor = 3 # OSM background map intensity reduction factor
 k_data = 6 # logistic function slope
 sigma_pixels = 1 # Gaussian kernel sigma (in pixels)
 
-colormap = 'plasma' # matplotlib colormap
+colormap = 'jet' # matplotlib colormap
 
 #%% main
 
@@ -180,11 +180,11 @@ for k in range(len(lat_lon_data)):
 data = 1/(1+numpy.exp(-(1/k_data)*(data-0))) # find more robust estimate of k_data
 data = (data-data.min())/(data.max()-data.min())
 
-# data points convolution with Gaussian kernel + normalization
+# convolution with Gaussian kernel + normalization
 data = skimage.filters.gaussian(data, sigma_pixels)
 data = (data-data.min())/(data.max()-data.min())
 
-# colorize data points
+# colorize data
 cmap = matplotlib.pyplot.get_cmap(colormap)
 data_color = cmap(data)
 data_color = data_color[:, :, 0:3] # remove alpha channel
@@ -196,10 +196,10 @@ supertile_overlay = numpy.zeros(supertile_size)
 for c in range(3):    
     supertile_overlay[:, :, c] = (1-data)*supertile[:, :, c]+data*data_color[:, :, c]
 
-# crop values out of range
+# crop values out of range [0,1]
 supertile_overlay = numpy.minimum.reduce([supertile_overlay, numpy.ones(supertile_size)])
 supertile_overlay = numpy.maximum.reduce([supertile_overlay, numpy.zeros(supertile_size)])
 
-# save images
+# save image
 print('writing heatmap.png...')
 skimage.io.imsave('heatmap.png', supertile_overlay)
