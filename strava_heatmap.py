@@ -68,9 +68,9 @@ def imgdownload(url, filename):
 
 zoom = 13 # OSM zoom level
 
-i_factor = 3 # OSM background map intensity reduction factor
-k_data = 6 # logistic function slope
-sigma_pixels = 1 # Gaussian kernel sigma (in pixels)
+i_factor = 3.0 # OSM background map intensity reduction factor
+k_data = 6.0 # logistic function slope
+sigma_pixels = 1.0 # Gaussian kernel sigma (in pixels)
 
 colormap = 'jet' # matplotlib colormap
 
@@ -84,9 +84,7 @@ lat_lon_data = []
 
 for i in range(len(gpx_files)):
     print('reading GPX file '+str(i+1)+'/'+str(len(gpx_files))+'...')
-    
-    file = open(gpx_files[i], 'r')
-    
+        
     with open(gpx_files[i]) as file:
         for line in file:
             if '<trkpt' in line:
