@@ -18,6 +18,7 @@ https://www.findlatitudeandlongitude.com/
 """
 
 #%% librairies
+import os
 import sys
 import glob
 import time
@@ -61,7 +62,7 @@ def downloadtile(url, filename):
     return
 
 #%% parameters
-zoom = 13 # OSM zoom level
+zoom = 4 # OSM zoom level
 
 tile_size = [256, 256] # OSM default
 
@@ -116,6 +117,9 @@ if tile_count > 300:
     sys.exit('ERROR_tile_count')
 
 # download tiles
+if not os.path.exists('./tiles'):
+	os.mkdir('./tiles')
+
 i = 0
 for x in range(x_tile_min, x_tile_max+1):
     for y in range(y_tile_min, y_tile_max+1):
