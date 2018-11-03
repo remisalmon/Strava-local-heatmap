@@ -61,13 +61,8 @@ def downloadtile(url, filename):
     return
 
 #%% parameters
-# latitude, longitude bounding box
-#min_lat = 29.5
-#max_lat = 30.2
-#min_lon = -96.0
-#max_lon = -95.0
-
 zoom = 13 # OSM zoom level
+
 tile_size = [256, 256] # OSM default
 
 sigma_pixels = 1.5 # Gaussian kernel sigma: half bandwith, in pixels
@@ -151,7 +146,7 @@ for x in range(x_tile_min, x_tile_max+1):
         j = x-x_tile_min
         supertile_gray[i*tile_size[0]:i*tile_size[0]+tile_size[0], j*tile_size[1]:j*tile_size[1]+tile_size[1]] = skimage.img_as_float(tile)
         
-# convert supertile to 3 channels image
+# convert supertile to 3 channels image for coloring
 supertile = skimage.color.gray2rgb(supertile_gray)
 
 # invert supertile colors
@@ -171,10 +166,10 @@ for k in range(len(lat_lon_data)):
     
     data[i-1:i+1, j-1:j+1] = data[i-1:i+1, j-1:j+1] + 1 # GPX trackpoint is 3x3 pixels
 
-# trim data accumulation to maximum number of rides
+# trim data accumulation to maximum number of activities
 data[data > len(gpx_files)] = len(gpx_files)
 
-# kernel density estimation: convolution with Gaussian kernel + normalization
+# kernel density estimation = convolution with Gaussian kernel + normalization
 data = skimage.filters.gaussian(data, sigma_pixels)
 data = (data-data.min())/(data.max()-data.min())
 
