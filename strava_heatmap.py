@@ -196,7 +196,7 @@ supertile_overlay = numpy.zeros(supertile_size)
 
 # fill color overlay
 for c in range(3):    
-    supertile_overlay[:, :, c] = (1-data)*supertile[:, :, c]+data*data_color[:, :, c]
+    supertile_overlay[:, :, c] = (1-data_color[:, :, c])*supertile[:, :, c]+data_color[:, :, c]
 
 # crop values out of range [0,1]
 supertile_overlay = numpy.minimum.reduce([supertile_overlay, numpy.ones(supertile_size)])
