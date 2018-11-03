@@ -70,10 +70,6 @@ def downloadtile(url, filename):
 zoom = 13 # OSM zoom level
 tile_size = [256, 256] # OSM default
 
-i_factor = 3.0 # background map intensity reduction factor: lower i_factor == background map less visible
-
-k_data = 1.0/6.0 # logistic function parameter: lower k_data == more trackpoints needed to show a high density on the heatmap
-
 sigma_pixels = 1.5 # Gaussian kernel sigma: half bandwith, in pixels
 
 colormap_style = 'jet' # heatmap color map, from matplotlib
@@ -161,9 +157,6 @@ supertile = skimage.color.gray2rgb(supertile_gray)
 # invert supertile colors
 supertile = 1-supertile
 
-# reduce OSM map intensity
-supertile  = supertile/i_factor
-
 # fill trackpoints data
 data = numpy.zeros(supertile_size[0:2])
 
@@ -178,9 +171,8 @@ for k in range(len(lat_lon_data)):
     
     data[i-1:i+1, j-1:j+1] = data[i-1:i+1, j-1:j+1] + 1 # GPX trackpoint is 3x3 pixels
 
-# transform trackpoints density with logistic function + normalization
-data = 1.0/(1.0+numpy.exp(-k_data*(data-0))) # find more robust estimattion of k_data
-data = (data-data.min())/(data.max()-data.min())
+# trim data accumulation to maximum number of rides
+data[data > len(gpx_files)] = len(gpx_files)
 
 # kernel density estimation: convolution with Gaussian kernel + normalization
 data = skimage.filters.gaussian(data, sigma_pixels)
@@ -189,6 +181,7 @@ data = (data-data.min())/(data.max()-data.min())
 # colorize data
 cmap = matplotlib.pyplot.get_cmap(colormap_style)
 data_color = cmap(data)
+data_color = data_color-cmap(0) # remove background color
 data_color = data_color[:, :, 0:3] # remove alpha channel
 
 # create color overlay
@@ -205,3 +198,5 @@ supertile_overlay = numpy.maximum.reduce([supertile_overlay, numpy.zeros(superti
 # save image
 print('writing heatmap.png...')
 skimage.io.imsave('heatmap.png', supertile_overlay)
+
+print('done')
