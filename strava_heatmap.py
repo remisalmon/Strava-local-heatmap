@@ -10,7 +10,7 @@ https://support.strava.com/hc/en-us/articles/216918437-Exporting-your-Data-and-B
 http://wiki.openstreetmap.org/wiki/Slippy_map_tilenames
 http://wiki.openstreetmap.org/wiki/Tile_servers
 
-    http://matplotlib.org/examples/color/colormaps_reference.html
+http://matplotlib.org/examples/color/colormaps_reference.html
 
 http://scikit-image.org/
 
@@ -19,7 +19,6 @@ https://www.findlatitudeandlongitude.com/
 
 #%% librairies
 import os
-import sys
 import glob
 import time
 import re
@@ -27,6 +26,7 @@ import requests
 import math
 import matplotlib
 import numpy
+
 import skimage.color
 import skimage.filters
 import skimage.io
@@ -66,7 +66,7 @@ zoom = 4 # OSM zoom level
 
 tile_size = [256, 256] # OSM default
 
-sigma_pixels = 1.5 # Gaussian kernel sigma: half bandwith, in pixels
+sigma_pixels = 1.5 # Gaussian kernel sigma (half bandwith, in pixels)
 
 colormap_style = 'jet' # heatmap color map, from matplotlib
 
@@ -74,6 +74,10 @@ colormap_style = 'jet' # heatmap color map, from matplotlib
 
 # find gpx file
 gpx_files = glob.glob('gpx/*.gpx')
+
+if not gpx_files:
+    print('ERROR: no GPX files in ./gpx/')
+    quit()
 
 # initialize list
 lat_lon_data = []
@@ -113,8 +117,8 @@ y_tile_max = max(xy_tiles[:, 1])
 # check area size
 tile_count = (x_tile_max-x_tile_min+1)*(y_tile_max-y_tile_min+1)
 if tile_count > 300:
-    print('area too large, reduce zoom or check GPX files\ntile_count = '+str(tile_count))
-    sys.exit('ERROR_tile_count')
+    print('ERROR: map too large, reduce zoom or check GPX files (tile_count = '+str(tile_count)+')')
+    quit()
 
 # download tiles
 if not os.path.exists('./tiles'):
@@ -131,6 +135,8 @@ for x in range(x_tile_min, x_tile_max+1):
             print('downloading tile '+str(i)+'/'+str(tile_count)+'...')
             
             downloadtile(tile_url, tile_filename)
+
+print('creating heatmap...')
 
 # create supertile
 supertile_size = [math.floor(y_tile_max-y_tile_min+1)*tile_size[0], math.floor((x_tile_max-x_tile_min+1)*tile_size[1]), 3]
