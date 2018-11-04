@@ -73,7 +73,7 @@ colormap_style = 'jet' # heatmap color map, from matplotlib
 #%% main
 
 # find gpx file
-gpx_files = glob.glob('gpx/*.gpx')
+gpx_files = glob.glob('./gpx/*.gpx')
 
 if not gpx_files:
     print('ERROR: no GPX files in ./gpx/')
@@ -130,7 +130,7 @@ for x in range(x_tile_min, x_tile_max+1):
         tile_url = 'https://maps.wikimedia.org/osm-intl/'+str(zoom)+'/'+str(x)+'/'+str(y)+'.png'
         tile_filename = 'tiles/tile_'+str(zoom)+'_'+str(x)+'_'+str(y)+'.png'
         
-        if len(glob.glob(tile_filename)) == 0:
+        if not glob.glob(tile_filename):
             i = i+1
             print('downloading tile '+str(i)+'/'+str(tile_count)+'...')
             
