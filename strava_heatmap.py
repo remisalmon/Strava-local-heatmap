@@ -128,7 +128,7 @@ i = 0
 for x in range(x_tile_min, x_tile_max+1):
     for y in range(y_tile_min, y_tile_max+1):
         tile_url = 'https://maps.wikimedia.org/osm-intl/'+str(zoom)+'/'+str(x)+'/'+str(y)+'.png'
-        tile_filename = 'tiles/tile_'+str(zoom)+'_'+str(x)+'_'+str(y)+'.png'
+        tile_filename = './tiles/tile_'+str(zoom)+'_'+str(x)+'_'+str(y)+'.png'
         
         if not glob.glob(tile_filename):
             i = i+1
