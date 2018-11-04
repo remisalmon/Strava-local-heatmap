@@ -14,3 +14,7 @@
 * NumPy
 * Matplotlib
 * scikit-image (https://scikit-image.org/)
+
+## To Do:
+
+* Calculate `zoom` automatically from lat, lon data
