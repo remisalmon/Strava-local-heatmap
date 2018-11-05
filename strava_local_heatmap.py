@@ -46,9 +46,7 @@ def deg2xy(lat_deg, lon_deg, zoom):
     lat_rad = math.radians(lat_deg)
     n = 2.0 ** zoom
     x = (lon_deg + 180.0) / 360.0 * n
-    x = x-math.floor(x)
     y = (1.0 - math.log(math.tan(lat_rad) + (1 / math.cos(lat_rad))) / math.pi) / 2.0 * n
-    y = y-math.floor(y)
     return(x, y)
 
 # download image
@@ -168,11 +166,8 @@ data = numpy.zeros(supertile_size[0:2])
 for k in range(len(lat_lon_data)):
     (x, y) = deg2xy(lat_lon_data[k, 0], lat_lon_data[k, 1], zoom)
     
-    i = math.floor(y*tile_size[0])
-    j = math.floor(x*tile_size[1])
-    
-    i = i+(xy_tiles[k, 1]-y_tile_min)*tile_size[0]
-    j = j+(xy_tiles[k, 0]-x_tile_min)*tile_size[1]
+    i = int(numpy.round((y-y_tile_min)*tile_size[0]))
+    j = int(numpy.round((x-x_tile_min)*tile_size[1]))
     
     data[i-1:i+1, j-1:j+1] = data[i-1:i+1, j-1:j+1] + 1 # GPX trackpoint is 3x3 pixels
 
