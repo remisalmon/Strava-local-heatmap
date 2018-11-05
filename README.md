@@ -1,4 +1,6 @@
-# strava_heatmap.py
+# strava_local_heatmap.py
+
+Python script to reproduce the Strava Global Heatmap (https://www.strava.com/heatmap) with local GPX data
 
 ## Usage:
 
@@ -11,10 +13,11 @@
 
 ## Python dependencies:
 
+* Python 3 (tested with Python 3.7.0)
 * NumPy
 * Matplotlib
 * scikit-image (https://scikit-image.org/)
 
 ## To Do:
 
-* Calculate `zoom` automatically from lat, lon data
+* Calculate `zoom` automatically from the GPX data
