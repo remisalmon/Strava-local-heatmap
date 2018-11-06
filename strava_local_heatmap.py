@@ -139,7 +139,7 @@ for x in range(x_tile_min, x_tile_max+1):
 print('creating heatmap...')
 
 # create supertile
-supertile_size = [math.floor(y_tile_max-y_tile_min+1)*tile_size[0], math.floor((x_tile_max-x_tile_min+1)*tile_size[1]), 3]
+supertile_size = [(y_tile_max-y_tile_min+1)*tile_size[0], (x_tile_max-x_tile_min+1)*tile_size[1], 3]
 
 supertile = numpy.zeros(supertile_size)
 supertile_gray = numpy.zeros(supertile_size[0:2])
@@ -148,13 +148,16 @@ supertile_gray = numpy.zeros(supertile_size[0:2])
 for x in range(x_tile_min, x_tile_max+1):
     for y in range(y_tile_min, y_tile_max+1):
         tile_filename = 'tiles/tile_'+str(zoom)+'_'+str(x)+'_'+str(y)+'.png'
+        
         tile = skimage.io.imread(tile_filename) # uint8 data type
         
         tile = skimage.color.rgb2gray(tile) # OSM tiles have either 1 or 3 channels..., reduce to 1 by default
+        tile = skimage.img_as_float(tile) # convert uint8 to float
         
         i = y-y_tile_min
         j = x-x_tile_min
-        supertile_gray[i*tile_size[0]:i*tile_size[0]+tile_size[0], j*tile_size[1]:j*tile_size[1]+tile_size[1]] = skimage.img_as_float(tile)
+        
+        supertile_gray[i*tile_size[0]:i*tile_size[0]+tile_size[0], j*tile_size[1]:j*tile_size[1]+tile_size[1]] = tile
         
 # convert supertile to 3 channels image for coloring
 supertile = skimage.color.gray2rgb(supertile_gray)
@@ -178,10 +181,12 @@ data[data > len(gpx_files)*2] = len(gpx_files)*2 # assuming each activity goes t
 
 # kernel density estimation = convolution with Gaussian kernel + normalization
 data = skimage.filters.gaussian(data, sigma_pixels)
+
 data = (data-data.min())/(data.max()-data.min())
 
 # colorize data
 cmap = matplotlib.pyplot.get_cmap(colormap_style)
+
 data_color = cmap(data)
 data_color = data_color-cmap(0) # remove background color
 data_color = data_color[:, :, 0:3] # remove alpha channel
