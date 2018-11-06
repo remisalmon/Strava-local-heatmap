@@ -60,13 +60,12 @@ def downloadtile(url, filename):
     return
 
 #%% parameters
-zoom = 4 # OSM zoom level
-
-tile_size = [256, 256] # OSM default
+tile_size = [256, 256] # OSM tile size (default)
+zoom = 19 # OSM max zoom level (default)
 
 sigma_pixels = 1.5 # Gaussian kernel sigma (half bandwith, in pixels)
 
-colormap_style = 'jet' # heatmap color map, from matplotlib
+colormap_style = 'hot' # heatmap color map, from matplotlib
 
 #%% main
 
@@ -100,23 +99,26 @@ lat_lon_data = numpy.array(lat_lon_data)
 
 print('processing GPX data...')
 
-# find corresponding OSM tiles IDs x,y
-xy_tiles = numpy.zeros(numpy.shape(lat_lon_data), dtype = int)
+# find good zoom level and corresponding OSM tiles x,y
+xy_tiles = numpy.zeros(lat_lon_data.shape, dtype = int)
 
-for i in range(len(xy_tiles)):
-    xy_tiles[i, :] = deg2num(lat_lon_data[i, 0], lat_lon_data[i, 1], zoom)
+while True: # replace with check on lat, lon min, max
+    for i in range(len(xy_tiles)):
+        xy_tiles[i, :] = deg2num(lat_lon_data[i, 0], lat_lon_data[i, 1], zoom)
 
-# find bounding OSM x,y tiles ID
-x_tile_min = min(xy_tiles[:, 0])
-x_tile_max = max(xy_tiles[:, 0])
-y_tile_min = min(xy_tiles[:, 1])
-y_tile_max = max(xy_tiles[:, 1])
+    # find bounding OSM x,y tiles ID
+    x_tile_min = min(xy_tiles[:, 0])
+    x_tile_max = max(xy_tiles[:, 0])
+    y_tile_min = min(xy_tiles[:, 1])
+    y_tile_max = max(xy_tiles[:, 1])
 
-# check area size
-tile_count = (x_tile_max-x_tile_min+1)*(y_tile_max-y_tile_min+1)
-if tile_count > 300:
-    print('ERROR: map too large, reduce zoom or check GPX files (tile_count = '+str(tile_count)+')')
-    quit()
+    # check area size
+    tile_count = (x_tile_max-x_tile_min+1)*(y_tile_max-y_tile_min+1)
+    
+    if (x_tile_max-x_tile_min+1) > 6 or (y_tile_max-y_tile_min+1) > 6:
+        zoom = zoom-1
+    else:
+        break
 
 # download tiles
 if not os.path.exists('./tiles'):
@@ -172,7 +174,7 @@ for k in range(len(lat_lon_data)):
     data[i-1:i+1, j-1:j+1] = data[i-1:i+1, j-1:j+1] + 1 # GPX trackpoint is 3x3 pixels
 
 # trim data accumulation to maximum number of activities
-data[data > len(gpx_files)] = len(gpx_files)
+data[data > len(gpx_files)*2] = len(gpx_files)*2 # assuming each activity goes through the same trackpoints 2 times at most
 
 # kernel density estimation = convolution with Gaussian kernel + normalization
 data = skimage.filters.gaussian(data, sigma_pixels)
@@ -196,7 +198,8 @@ supertile_overlay = numpy.minimum.reduce([supertile_overlay, numpy.ones(supertil
 supertile_overlay = numpy.maximum.reduce([supertile_overlay, numpy.zeros(supertile_size)])
 
 # save image
-print('writing heatmap.png...')
+print('saving heatmap.png...')
+
 skimage.io.imsave('heatmap.png', supertile_overlay)
 
 print('done')
