@@ -61,7 +61,7 @@ def downloadtile(url, filename):
 tile_size = [256, 256] # OSM tile size (default)
 zoom = 19 # OSM max zoom level (default)
 
-sigma_pixels = 1.5 # Gaussian kernel sigma (half bandwith, in pixels)
+sigma_pixels = 5.0 # Gaussian kernel sigma (half bandwith, in pixels)
 
 colormap_style = 'hot' # heatmap color map, from matplotlib
 
@@ -176,7 +176,7 @@ for k in range(len(lat_lon_data)):
     i = int(numpy.round((y-y_tile_min)*tile_size[0]))
     j = int(numpy.round((x-x_tile_min)*tile_size[1]))
     
-    data[i-1:i+1, j-1:j+1] = data[i-1:i+1, j-1:j+1] + 1 # GPX trackpoint is 3x3 pixels
+    data[i-2:i+2, j-2:j+2] = data[i-2:i+2, j-2:j+2] + 1 # GPX trackpoint is 5x5 pixels
 
 # trim data accumulation to maximum number of activities
 data[data > len(gpx_files)*2] = len(gpx_files)*2 # assuming each activity goes through the same trackpoints 2 times at most
