@@ -143,7 +143,6 @@ print('creating heatmap...')
 supertile_size = [(y_tile_max-y_tile_min+1)*tile_size[0], (x_tile_max-x_tile_min+1)*tile_size[1], 3]
 
 supertile = numpy.zeros(supertile_size)
-supertile_gray = numpy.zeros(supertile_size[0:2])
 
 # read tiles and fill supertile
 for x in range(x_tile_min, x_tile_max+1):
@@ -152,19 +151,21 @@ for x in range(x_tile_min, x_tile_max+1):
         
         tile = skimage.io.imread(tile_filename) # uint8 data type
         
-        tile = skimage.color.rgb2gray(tile) # OSM tiles have either 1 or 3 channels..., reduce to 1 by default
-        tile = skimage.img_as_float(tile) # convert uint8 to float
+        # convert uint8 to float
+        tile = skimage.img_as_float(tile) 
+        
+        # convert tile to gray scale and invert colors
+        tile = skimage.color.rgb2gray(tile)
+        
+        tile = 1-tile
+        
+        # convert tile to 3 channels image
+        tile = skimage.color.gray2rgb(tile)        
         
         i = y-y_tile_min
         j = x-x_tile_min
         
-        supertile_gray[i*tile_size[0]:i*tile_size[0]+tile_size[0], j*tile_size[1]:j*tile_size[1]+tile_size[1]] = tile
-        
-# convert supertile to 3 channels image for coloring
-supertile = skimage.color.gray2rgb(supertile_gray)
-
-# invert supertile colors
-supertile = 1-supertile
+        supertile[i*tile_size[0]:i*tile_size[0]+tile_size[0], j*tile_size[1]:j*tile_size[1]+tile_size[1], :] = tile
 
 # fill trackpoints data
 data = numpy.zeros(supertile_size[0:2])
