@@ -13,8 +13,6 @@ http://wiki.openstreetmap.org/wiki/Tile_servers
 http://matplotlib.org/examples/color/colormaps_reference.html
 
 http://scikit-image.org/
-
-https://www.findlatitudeandlongitude.com/
 """
 
 #%% librairies
@@ -73,7 +71,7 @@ colormap_style = 'hot' # heatmap color map, from matplotlib
 gpx_files = glob.glob('./gpx/*.gpx')
 
 if not gpx_files:
-    print('ERROR: no GPX files in ./gpx/')
+    print('ERROR: no GPX files in gpx folder')
     quit()
 
 # initialize list
@@ -114,15 +112,14 @@ while True:
     y_tile_min = xy_tiles_minmax[:, 1].min()
     y_tile_max = xy_tiles_minmax[:, 1].max()
     
-    # total number of tiles
-    tile_count = (x_tile_max-x_tile_min+1)*(y_tile_max-y_tile_min+1)
-    
     # check if number of tiles used is too high
-    #if tile_count > 8*8:
     if (x_tile_max-x_tile_min+1) > 6 or (y_tile_max-y_tile_min+1) > 6:
         zoom = zoom-1    
     else:
         break
+
+# total number of tiles
+tile_count = (x_tile_max-x_tile_min+1)*(y_tile_max-y_tile_min+1)
 
 # download tiles
 if not os.path.exists('./tiles'):
