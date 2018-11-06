@@ -100,23 +100,27 @@ lat_lon_data = numpy.array(lat_lon_data)
 print('processing GPX data...')
 
 # find good zoom level and corresponding OSM tiles x,y
-xy_tiles = numpy.zeros(lat_lon_data.shape, dtype = int)
+xy_tiles_minmax = numpy.zeros((4, 2), dtype = int)
 
-while True: # replace with check on lat, lon min, max
-    for i in range(len(xy_tiles)):
-        xy_tiles[i, :] = deg2num(lat_lon_data[i, 0], lat_lon_data[i, 1], zoom)
-
-    # find bounding OSM x,y tiles ID
-    x_tile_min = min(xy_tiles[:, 0])
-    x_tile_max = max(xy_tiles[:, 0])
-    y_tile_min = min(xy_tiles[:, 1])
-    y_tile_max = max(xy_tiles[:, 1])
-
-    # check area size
+while True:
+    # find x,y tiles coordinates of bounding box
+    xy_tiles_minmax[0, :] = deg2num(lat_lon_data[:, 0].min(), lat_lon_data[:, 1].min(), zoom)
+    xy_tiles_minmax[1, :] = deg2num(lat_lon_data[:, 0].min(), lat_lon_data[:, 1].max(), zoom)
+    xy_tiles_minmax[2, :] = deg2num(lat_lon_data[:, 0].max(), lat_lon_data[:, 1].min(), zoom)
+    xy_tiles_minmax[3, :] = deg2num(lat_lon_data[:, 0].max(), lat_lon_data[:, 1].max(), zoom)
+    
+    x_tile_min = xy_tiles_minmax[:, 0].min()
+    x_tile_max = xy_tiles_minmax[:, 0].max()
+    y_tile_min = xy_tiles_minmax[:, 1].min()
+    y_tile_max = xy_tiles_minmax[:, 1].max()
+    
+    # total number of tiles
     tile_count = (x_tile_max-x_tile_min+1)*(y_tile_max-y_tile_min+1)
     
+    # check if number of tiles used is too high
+    #if tile_count > 8*8:
     if (x_tile_max-x_tile_min+1) > 6 or (y_tile_max-y_tile_min+1) > 6:
-        zoom = zoom-1
+        zoom = zoom-1    
     else:
         break
 
