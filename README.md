@@ -17,7 +17,3 @@ Python script to reproduce the Strava Global Heatmap (https://www.strava.com/hea
 * NumPy
 * Matplotlib
 * scikit-image (https://scikit-image.org/)
-
-## To Do:
-
-* Calculate `zoom` automatically from the GPX data
