@@ -9,7 +9,7 @@ Python script to reproduce the Strava Global Heatmap (https://www.strava.com/hea
 * Run `python3 strava_local_heatmap.py`
 * The heatmap PNG file `heatmap.png` is saved to the current directory
 
-![heatmap.png](heatmap.png)
+![heatmap_samples.png](heatmap_samples.png)
 
 ## Python dependencies:
 
