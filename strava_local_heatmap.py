@@ -113,7 +113,7 @@ while True:
     y_tile_max = xy_tiles_minmax[:, 1].max()
     
     # check if number of tiles used is too high
-    if (x_tile_max-x_tile_min+1) > 6 or (y_tile_max-y_tile_min+1) > 6:
+    if (x_tile_max-x_tile_min+1) > 4 or (y_tile_max-y_tile_min+1) > 4:
         zoom = zoom-1    
     else:
         break
