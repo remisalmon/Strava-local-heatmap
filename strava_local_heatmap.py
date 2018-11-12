@@ -100,12 +100,16 @@ print('processing GPX data...')
 # find good zoom level and corresponding OSM tiles x,y
 xy_tiles_minmax = numpy.zeros((4, 2), dtype = int)
 
+lat_min = lat_lon_data[:, 0].min()
+lat_max = lat_lon_data[:, 0].max()
+lon_min = lat_lon_data[:, 1].min()
+lon_max = lat_lon_data[:, 1].max()
 while True:
     # find x,y tiles coordinates of bounding box
-    xy_tiles_minmax[0, :] = deg2num(lat_lon_data[:, 0].min(), lat_lon_data[:, 1].min(), zoom)
-    xy_tiles_minmax[1, :] = deg2num(lat_lon_data[:, 0].min(), lat_lon_data[:, 1].max(), zoom)
-    xy_tiles_minmax[2, :] = deg2num(lat_lon_data[:, 0].max(), lat_lon_data[:, 1].min(), zoom)
-    xy_tiles_minmax[3, :] = deg2num(lat_lon_data[:, 0].max(), lat_lon_data[:, 1].max(), zoom)
+    xy_tiles_minmax[0, :] = deg2num(lat_min, lon_min, zoom)
+    xy_tiles_minmax[1, :] = deg2num(lat_min, lon_max, zoom)
+    xy_tiles_minmax[2, :] = deg2num(lat_max, lon_min, zoom)
+    xy_tiles_minmax[3, :] = deg2num(lat_max, lon_max, zoom)
     
     x_tile_min = xy_tiles_minmax[:, 0].min()
     x_tile_max = xy_tiles_minmax[:, 0].max()
