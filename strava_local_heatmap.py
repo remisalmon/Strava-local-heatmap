@@ -23,6 +23,7 @@ import re
 import requests
 import math
 import matplotlib
+import matplotlib.pyplot as plt
 import numpy
 
 import skimage.color
@@ -187,7 +188,7 @@ data = skimage.filters.gaussian(data, sigma_pixels)
 data = (data-data.min())/(data.max()-data.min())
 
 # colorize data
-cmap = matplotlib.pyplot.get_cmap(colormap_style)
+cmap = plt.get_cmap(colormap_style)
 
 data_color = cmap(data)
 data_color = data_color-cmap(0) # remove background color
