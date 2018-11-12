@@ -22,7 +22,6 @@ import time
 import re
 import requests
 import math
-import matplotlib
 import matplotlib.pyplot as plt
 import numpy
 
