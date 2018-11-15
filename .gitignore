@@ -1,3 +1,2 @@
-./gpx/*.gpx
-./*.png
-
+gpx/*.gpx
+tiles/*.png
