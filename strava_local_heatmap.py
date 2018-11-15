@@ -22,8 +22,9 @@ import time
 import re
 import requests
 import math
+
+import numpy as np
 import matplotlib.pyplot as plt
-import numpy
 
 import skimage.color
 import skimage.filters
@@ -58,6 +59,9 @@ def downloadtile(url, filename):
     return
 
 #%% parameters
+heatmap_frequency_map = False # generates a heatmap of the GPX trackpoints location only
+#heatmap_frequency_map = True # generates a heatmap of the GPX trackpoints location and frequency
+
 tile_size = [256, 256] # OSM tile size (default)
 zoom = 19 # OSM max zoom level (default)
 
@@ -93,12 +97,12 @@ for i in range(len(gpx_files)):
                 lat_lon_data.append([lat, lon])
 
 # convert to NumPy array
-lat_lon_data = numpy.array(lat_lon_data)
+lat_lon_data = np.array(lat_lon_data)
 
 print('processing GPX data...')
 
 # find good zoom level and corresponding OSM tiles x,y
-xy_tiles_minmax = numpy.zeros((4, 2), dtype = int)
+xy_tiles_minmax = np.zeros((4, 2), dtype = int)
 
 lat_min = lat_lon_data[:, 0].min()
 lat_max = lat_lon_data[:, 0].max()
@@ -146,7 +150,7 @@ print('creating heatmap...')
 # create supertile
 supertile_size = [(y_tile_max-y_tile_min+1)*tile_size[0], (x_tile_max-x_tile_min+1)*tile_size[1], 3]
 
-supertile = numpy.zeros(supertile_size)
+supertile = np.zeros(supertile_size)
 
 # read tiles and fill supertile
 for x in range(x_tile_min, x_tile_max+1):
@@ -172,22 +176,30 @@ for x in range(x_tile_min, x_tile_max+1):
         supertile[i*tile_size[0]:i*tile_size[0]+tile_size[0], j*tile_size[1]:j*tile_size[1]+tile_size[1], :] = tile
 
 # fill trackpoints data
-data = numpy.zeros(supertile_size[0:2])
+data = np.zeros(supertile_size[0:2])
 
 for k in range(len(lat_lon_data)):
     (x, y) = deg2xy(lat_lon_data[k, 0], lat_lon_data[k, 1], zoom)
     
-    i = int(numpy.round((y-y_tile_min)*tile_size[0]))
-    j = int(numpy.round((x-x_tile_min)*tile_size[1]))
+    i = int(np.round((y-y_tile_min)*tile_size[0]))
+    j = int(np.round((x-x_tile_min)*tile_size[1]))
     
     data[i-2:i+2, j-2:j+2] = data[i-2:i+2, j-2:j+2] + 1 # GPX trackpoint is 5x5 pixels
 
-# trim data accumulation to maximum number of activities
-data[data > len(gpx_files)*2] = len(gpx_files)*2 # assuming each activity goes through the same trackpoints 2 times at most
+# threshold trackpoints accumulation to avoid large local maxima
+if heatmap_frequency_map:
+    pixel_res = 156543.03*math.cos(math.radians(lat_lon_data[:, 0].mean()))/(2**zoom) # pixel resolution (meter/pixel)
 
-# kernel density estimation = convolution with Gaussian kernel + normalization
+    m = pixel_res*len(gpx_files) # maximum trackpoints accumulation per pixel: assuming 1 trackpoint per meter per GPX file
+else:
+    m = 1
+
+data[data > m] = m # threshold data to maximum accumulation of trackpoints
+
+# kernel density estimation = convolution with Gaussian kernel
 data = skimage.filters.gaussian(data, sigma_pixels)
 
+# normalize data to [0,1]
 data = (data-data.min())/(data.max()-data.min())
 
 # colorize data
@@ -198,15 +210,15 @@ data_color = data_color-cmap(0) # remove background color
 data_color = data_color[:, :, 0:3] # remove alpha channel
 
 # create color overlay
-supertile_overlay = numpy.zeros(supertile_size)
+supertile_overlay = np.zeros(supertile_size)
 
 # fill color overlay
 for c in range(3):    
     supertile_overlay[:, :, c] = (1-data_color[:, :, c])*supertile[:, :, c]+data_color[:, :, c]
 
 # crop values out of range [0,1]
-supertile_overlay = numpy.minimum.reduce([supertile_overlay, numpy.ones(supertile_size)])
-supertile_overlay = numpy.maximum.reduce([supertile_overlay, numpy.zeros(supertile_size)])
+supertile_overlay = np.minimum.reduce([supertile_overlay, np.ones(supertile_size)])
+supertile_overlay = np.maximum.reduce([supertile_overlay, np.zeros(supertile_size)])
 
 # save image
 print('saving heatmap.png...')
