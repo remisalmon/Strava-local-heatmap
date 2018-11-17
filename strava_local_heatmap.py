@@ -218,10 +218,6 @@ supertile_overlay = np.zeros(supertile_size)
 for c in range(3):    
     supertile_overlay[:, :, c] = (1-data_color[:, :, c])*supertile[:, :, c]+data_color[:, :, c]
 
-# crop values out of range [0,1]
-supertile_overlay = np.minimum.reduce([supertile_overlay, np.ones(supertile_size)])
-supertile_overlay = np.maximum.reduce([supertile_overlay, np.zeros(supertile_size)])
-
 # save image
 print('saving heatmap.png...')
 
