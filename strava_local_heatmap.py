@@ -59,13 +59,13 @@ def downloadtile(url, filename):
     return
 
 #%% parameters
-heatmap_frequency_map = False # generates a heatmap of the GPX trackpoints location only
-#heatmap_frequency_map = True # generates a heatmap of the GPX trackpoints location and frequency
+heatmap_frequency_map = False # generates a heatmap of the activities location only
+#heatmap_frequency_map = True # generates a heatmap of the activities location and frequency
 
 tile_size = [256, 256] # OSM tile size (default)
 zoom = 19 # OSM max zoom level (default)
 
-sigma_pixels = 5.0 # Gaussian kernel sigma (half bandwith, in pixels)
+sigma_pixels = 5 # Gaussian kernel sigma (half bandwith in pixels, even number)
 
 colormap_style = 'hot' # heatmap color map, from matplotlib
 
@@ -178,17 +178,19 @@ for x in range(x_tile_min, x_tile_max+1):
 # fill trackpoints data
 data = np.zeros(supertile_size[0:2])
 
+w_pixels = int((sigma_pixels-1)/2)
+
 for k in range(len(lat_lon_data)):
     (x, y) = deg2xy(lat_lon_data[k, 0], lat_lon_data[k, 1], zoom)
     
     i = int(np.round((y-y_tile_min)*tile_size[0]))
     j = int(np.round((x-x_tile_min)*tile_size[1]))
     
-    data[i-2:i+2, j-2:j+2] = data[i-2:i+2, j-2:j+2] + 1 # GPX trackpoint is 5x5 pixels
+    data[i-w_pixels:i+w_pixels+1, j-w_pixels:j+w_pixels+1] = data[i-w_pixels:i+w_pixels+1, j-w_pixels:j+w_pixels+1] + 1 # GPX trackpoint is sigma_pixels x sigma_pixels
 
 # threshold trackpoints accumulation to avoid large local maxima
 if heatmap_frequency_map:
-    pixel_res = 156543.03*math.cos(math.radians(lat_lon_data[:, 0].mean()))/(2**zoom) # pixel resolution (meter/pixel)
+    pixel_res = 156543.03*math.cos(math.radians(lat_lon_data[:, 0].mean()))/(2**zoom) # pixel resolution (meters/pixel)
 
     m = pixel_res*len(gpx_files) # maximum trackpoints accumulation per pixel: assuming 1 trackpoint per meter per GPX file
 else:
