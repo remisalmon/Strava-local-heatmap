@@ -192,9 +192,9 @@ for k in range(len(lat_lon_data)):
 if heatmap_frequency_map:
     pixel_res = 156543.03*math.cos(math.radians(lat_lon_data[:, 0].mean()))/(2**zoom) # pixel resolution (meters/pixel)
 
-    m = pixel_res*len(gpx_files) # maximum trackpoints accumulation per pixel: assuming 1 trackpoint per meter per GPX file
+    m = (1.0/5.0)*pixel_res*len(gpx_files) # trackpoints max accumulation per pixel = (1/5) trackpoints/meters * (pixel_res) meters/pixels per (1) activity (Strava records trackpoints every 5 meters in average)
 else:
-    m = 1
+    m = 1.0
 
 data[data > m] = m # threshold data to maximum accumulation of trackpoints
 
