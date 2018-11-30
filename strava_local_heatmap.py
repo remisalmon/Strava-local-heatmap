@@ -65,7 +65,7 @@ heatmap_frequency_map = False # generates a heatmap of the activities location o
 tile_size = [256, 256] # OSM tile size (default)
 zoom = 19 # OSM max zoom level (default)
 
-sigma_pixels = 5 # Gaussian kernel sigma (half bandwith in pixels, even number)
+sigma_pixels = 2 # Gaussian kernel sigma (half bandwith in pixels, even number)
 
 colormap_style = 'hot' # heatmap color map, from matplotlib
 
@@ -121,7 +121,7 @@ while True:
     y_tile_max = xy_tiles_minmax[:, 1].max()
     
     # check if number of tiles used is too high
-    if (x_tile_max-x_tile_min+1) > 4 or (y_tile_max-y_tile_min+1) > 4:
+    if (x_tile_max-x_tile_min+1) > 5 or (y_tile_max-y_tile_min+1) > 5:
         zoom = zoom-1    
     else:
         break
@@ -178,7 +178,7 @@ for x in range(x_tile_min, x_tile_max+1):
 # fill trackpoints data
 data = np.zeros(supertile_size[0:2])
 
-w_pixels = int((sigma_pixels-1)/2)
+w_pixels = int(sigma_pixels)
 
 for k in range(len(lat_lon_data)):
     (x, y) = deg2xy(lat_lon_data[k, 0], lat_lon_data[k, 1], zoom)
