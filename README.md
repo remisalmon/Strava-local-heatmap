@@ -6,30 +6,21 @@ Python script to reproduce the Strava Global Heatmap (https://www.strava.com/hea
 
 * Download the GPX files from Strava (cf. https://support.strava.com/hc/en-us/articles/216918437-Exporting-your-Data-and-Bulk-Export)
 * Copy the GPX files to the `gpx` folder
-* [Optional] For best resolution, update `max_nb_tiles` var in `strava_local_heatmap`
+* [Optional] For best resolution, update `max_nb_tiles` in `strava_local_heatmap.py`
 * Run `python3 strava_local_heatmap.py`
 * The heatmap PNG file `heatmap.png` is saved to the current directory
 
-![heatmap_samples.png](heatmap_samples.png)
-
-
-**Zoom Comparison**
-![zoom comparison](heatmap_zoom.png)
-
+![heatmap_zoom.png](heatmap_zoom.png)
 
 ## Python dependencies:
 
-* Python 3 (tested with Python 3.7.0)
-* NumPy
-* Matplotlib
-* scikit-image (https://scikit-image.org/)
+* Python >= 3.7.0
+* NumPy >= 1.15.4
+* Matplotlib >= 2.2.3
+* scikit-image >= 0.14.0 (https://scikit-image.org/)
 
 ## Distribution dependencies
 
 ### Archlinux
 
 `sudo pacman -S tk`
-
-### Debian/Ubuntu
-
-`sudo apt-get install tk`
