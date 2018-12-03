@@ -37,6 +37,8 @@ sigma_pixels = 2 # Gaussian kernel sigma (half bandwith in pixels, even number)
 
 colormap_style = 'hot' # heatmap color map (from http://matplotlib.org/examples/color/colormaps_reference.html)
 
+
+max_nb_tiles = 5 # Set max nb tiles for drawing map
 tile_size = [256, 256] # OSM tile size (default)
 zoom = 19 # OSM max zoom level (default)
 
@@ -120,7 +122,7 @@ while True:
     y_tile_max = xy_tiles_minmax[:, 1].max()
 
     # check if number of tiles used is too high
-    if (x_tile_max-x_tile_min+1) > 5 or (y_tile_max-y_tile_min+1) > 5:
+    if (x_tile_max-x_tile_min+1) > max_nb_tiles or (y_tile_max-y_tile_min+1) > max_nb_tiles:
         zoom = zoom-1
     else:
         break
