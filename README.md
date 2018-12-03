@@ -15,12 +15,13 @@ Python script to reproduce the Strava Global Heatmap (https://www.strava.com/hea
 ## Python dependencies:
 
 * Python >= 3.7.0
+* Requests >= 2.20.1
 * NumPy >= 1.15.4
-* Matplotlib >= 2.2.3
+* Matplotlib >= 3.0.1
 * scikit-image >= 0.14.0 (https://scikit-image.org/)
 
-## Distribution dependencies
+## Distribution dependencies:
 
 ### Archlinux
 
-`sudo pacman -S tk`
+`sudo pacman -S tk` (cf. https://github.com/remisalmon/strava-local-heatmap/pull/3)
