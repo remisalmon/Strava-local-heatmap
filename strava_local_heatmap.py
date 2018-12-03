@@ -37,8 +37,8 @@ sigma_pixels = 2 # Gaussian kernel sigma (half bandwith in pixels, even number)
 
 colormap_style = 'hot' # heatmap color map (from http://matplotlib.org/examples/color/colormaps_reference.html)
 
+max_nb_tiles = 5 # maximum number of tiles to construct the heatmap (heatmap max dimension is max_nb_tiles*256)
 
-max_nb_tiles = 5 # Set max nb tiles for drawing map
 tile_size = [256, 256] # OSM tile size (default)
 zoom = 19 # OSM max zoom level (default)
 
