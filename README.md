@@ -4,19 +4,17 @@ Python script to reproduce the Strava Global Heatmap (https://www.strava.com/hea
 
 ## Usage:
 
-* Download the GPX files from Strava (cf. https://support.strava.com/hc/en-us/articles/216918437-Exporting-your-Data-and-Bulk-Export)
-* Copy the GPX files to the `gpx` folder
-* [Optional] For best resolution, update `max_nb_tiles` in `strava_local_heatmap.py`
+* Download your GPX files from Strava to the `gpx` folder (cf. https://support.strava.com/hc/en-us/articles/216918437-Exporting-your-Data-and-Bulk-Export)
+* [Optional] To change the resolution, update `max_nb_tiles` in `strava_local_heatmap.py`
 * Run `python3 strava_local_heatmap.py`
-* The heatmap PNG and CSV file is saved to the current directory
+* The heatmap PNG and CSV files are saved to the current directory
 
-**heatmap.png result**
+**heatmap.png:**
 ![heatmap_zoom.png](heatmap_zoom.png)
 
-**heatmap.csv result imported in** https://umap.openstreetmap.fr (cf. https://github.com/remisalmon/strava-local-heatmap/pull/4)
+**heatmap.csv visualization with** [umap.openstreetmap.fr](https://umap.openstreetmap.fr)**:** (contribution by @badele)
 ![heatmap_umap.png](heatmap_umap.png)
-
-[Dynamic Umap map (wait a few seconds)](https://umap.openstreetmap.fr/en/map/demo-heatmap_261644)
+[link to dynamic map](https://umap.openstreetmap.fr/en/map/demo-heatmap_261644)
 
 ## Python dependencies:
 
