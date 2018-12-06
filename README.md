@@ -12,7 +12,7 @@ Python script to reproduce the Strava Global Heatmap (https://www.strava.com/hea
 **heatmap.png:**
 ![heatmap_zoom.png](heatmap_zoom.png)
 
-**heatmap.csv visualization with** [umap.openstreetmap.fr](https://umap.openstreetmap.fr)**:** (contribution by @badele)
+**heatmap.csv visualization with** [umap.openstreetmap.fr](https://umap.openstreetmap.fr)**:** (contribution by [@badele](https://github.com/badele))
 ![heatmap_umap.png](heatmap_umap.png)
 [link to dynamic map](https://umap.openstreetmap.fr/en/map/demo-heatmap_261644)
 
