@@ -60,6 +60,7 @@ def deg2xy(lat_deg, lon_deg, zoom):
     y = (1.0 - math.log(math.tan(lat_rad) + (1 / math.cos(lat_rad))) / math.pi) / 2.0 * n
     return(x, y)
 
+# return x,y coordinates in tile from lat,lon in degrees (from http://wiki.openstreetmap.org/wiki/Slippy_map_tilenames)
 def xy2deg(xtile, ytile, zoom):
   n = 2.0 ** zoom
   lon_deg = xtile / n * 360.0 - 180.0
@@ -212,24 +213,6 @@ data = skimage.filters.gaussian(data, sigma_pixels)
 # normalize data to [0,1]
 data = (data-data.min())/(data.max()-data.min())
 
-# Export heatmeap.csv file
-csv = []
-csv.append("lat,lon,intensity")
-y,x =  data.shape
-for x in range(0,x):
-    for y in range(0,y):
-        density = data[y][x]
-        if density > 0.1 :
-            cx = -(-x_tile_min*tile_size[1] - x)/tile_size[1]
-            cy = -(-y_tile_min*tile_size[0] - y)/tile_size[0]
-
-            lat,lon = xy2deg(cx,cy,zoom)
-            csv.append("%(lat)s,%(lon)s,%(density)s" % locals())
-
-with open('heatmap.csv', 'w') as f:
-    for item in csv:
-        f.write("%s\n" % item)
-
 # colorize data
 cmap = plt.get_cmap(colormap_style)
 
@@ -248,5 +231,25 @@ for c in range(3):
 print('saving heatmap.png...')
 
 skimage.io.imsave('heatmap.png', supertile_overlay)
+
+# save csv file
+print('saving heatmap.csv...')
+
+csv_data = []
+csv_data.append('lat,lon,intensity')
+
+for i in range(data.shape[0]):
+    for j in range(data.shape[1]):
+        if data[i, j] > 0.1:
+            x = x_tile_min+j/tile_size[1]
+            y = y_tile_min+i/tile_size[0]
+            
+            (lat, lon) = xy2deg(x, y, zoom)
+            
+            csv_data.append(str(lat)+','+str(lon)+','+str(data[i, j]))
+
+with open('heatmap.csv', 'w') as file:
+    for line in csv_data:
+        file.write(line+'\n')
 
 print('done')
