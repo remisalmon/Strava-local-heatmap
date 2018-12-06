@@ -60,6 +60,13 @@ def deg2xy(lat_deg, lon_deg, zoom):
     y = (1.0 - math.log(math.tan(lat_rad) + (1 / math.cos(lat_rad))) / math.pi) / 2.0 * n
     return(x, y)
 
+def xy2deg(xtile, ytile, zoom):
+  n = 2.0 ** zoom
+  lon_deg = xtile / n * 360.0 - 180.0
+  lat_rad = math.atan(math.sinh(math.pi * (1 - 2 * ytile / n)))
+  lat_deg = math.degrees(lat_rad)
+  return (lat_deg, lon_deg) 
+
 # download image
 def downloadtile(url, filename):
     req = requests.get(url)
@@ -204,6 +211,24 @@ data = skimage.filters.gaussian(data, sigma_pixels)
 
 # normalize data to [0,1]
 data = (data-data.min())/(data.max()-data.min())
+
+# Export heatmeap.csv file
+csv = []
+csv.append("lat,lon,intensity")
+y,x =  data.shape
+for x in range(0,x):
+    for y in range(0,y):
+        density = data[y][x]
+        if density > 0.1 :
+            cx = -(-x_tile_min*tile_size[1] - x)/tile_size[1]
+            cy = -(-y_tile_min*tile_size[0] - y)/tile_size[0]
+
+            lat,lon = xy2deg(cx,cy,zoom)
+            csv.append("%(lat)s,%(lon)s,%(density)s" % locals())
+
+with open('heatmap.csv', 'w') as f:
+    for item in csv:
+        f.write("%s\n" % item)
 
 # colorize data
 cmap = plt.get_cmap(colormap_style)
