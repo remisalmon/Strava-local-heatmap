@@ -21,14 +21,12 @@ import glob
 import time
 import re
 import requests
-import math
 
 import numpy as np
 import matplotlib.pyplot as plt
 
 import skimage.color
 import skimage.filters
-import skimage.io
 
 #%% parameters
 use_cumululative_distribution = True # take into account the accumulation of trackpoints in each pixel (True, False)
@@ -46,26 +44,26 @@ zoom = 19 # OSM max zoom level (default)
 
 # return OSM x,y tile ID from lat,lon in degrees (from http://wiki.openstreetmap.org/wiki/Slippy_map_tilenames)
 def deg2num(lat_deg, lon_deg, zoom):
-  lat_rad = math.radians(lat_deg)
+  lat_rad = np.radians(lat_deg)
   n = 2.0 ** zoom
   xtile = int((lon_deg + 180.0) / 360.0 * n)
-  ytile = int((1.0 - math.log(math.tan(lat_rad) + (1 / math.cos(lat_rad))) / math.pi) / 2.0 * n)
+  ytile = int((1.0 - np.log(np.tan(lat_rad) + (1 / np.cos(lat_rad))) / np.pi) / 2.0 * n)
   return(xtile, ytile)
 
 # return x,y coordinates in tile from lat,lon in degrees
 def deg2xy(lat_deg, lon_deg, zoom):
-    lat_rad = math.radians(lat_deg)
+    lat_rad = np.radians(lat_deg)
     n = 2.0 ** zoom
     x = (lon_deg + 180.0) / 360.0 * n
-    y = (1.0 - math.log(math.tan(lat_rad) + (1 / math.cos(lat_rad))) / math.pi) / 2.0 * n
+    y = (1.0 - np.log(np.tan(lat_rad) + (1 / np.cos(lat_rad))) / np.pi) / 2.0 * n
     return(x, y)
 
 # return x,y coordinates in tile from lat,lon in degrees (from http://wiki.openstreetmap.org/wiki/Slippy_map_tilenames)
 def xy2deg(xtile, ytile, zoom):
   n = 2.0 ** zoom
   lon_deg = xtile / n * 360.0 - 180.0
-  lat_rad = math.atan(math.sinh(math.pi * (1 - 2 * ytile / n)))
-  lat_deg = math.degrees(lat_rad)
+  lat_rad = np.arctan(np.sinh(np.pi * (1 - 2 * ytile / n)))
+  lat_deg = np.degrees(lat_rad)
   return (lat_deg, lon_deg) 
 
 # download image
@@ -166,7 +164,7 @@ for x in range(x_tile_min, x_tile_max+1):
     for y in range(y_tile_min, y_tile_max+1):
         tile_filename = 'tiles/tile_'+str(zoom)+'_'+str(x)+'_'+str(y)+'.png'
 
-        tile = skimage.io.imread(tile_filename) # uint8 data type
+        tile = plt.imread(tile_filename) # uint8 data type
 
         # convert uint8 to float
         tile = skimage.img_as_float(tile)
@@ -199,7 +197,7 @@ for k in range(len(lat_lon_data)):
 
 # threshold trackpoints accumulation to avoid large local maxima
 if use_cumululative_distribution:
-    pixel_res = 156543.03*math.cos(math.radians(lat_lon_data[:, 0].mean()))/(2**zoom) # pixel resolution (meters/pixel)
+    pixel_res = 156543.03*np.cos(np.radians(lat_lon_data[:, 0].mean()))/(2**zoom) # pixel resolution (meters/pixel)
 
     m = (1.0/5.0)*pixel_res*len(gpx_files) # trackpoints max accumulation per pixel = (1/5) trackpoints/meters * (pixel_res) meters/pixels per (1) activity (Strava records trackpoints every 5 meters in average)
 else:
@@ -230,7 +228,7 @@ for c in range(3):
 # save image
 print('saving heatmap.png...')
 
-skimage.io.imsave('heatmap.png', supertile_overlay)
+plt.imsave('heatmap.png', supertile_overlay)
 
 # save csv file
 print('saving heatmap.csv...')
