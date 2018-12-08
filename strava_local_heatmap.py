@@ -40,6 +40,8 @@ max_nb_tiles = 5 # maximum number of tiles to construct the heatmap (heatmap max
 tile_size = [256, 256] # OSM tile size (default)
 zoom = 19 # OSM max zoom level (default)
 
+# Set Limit bounds, ex: max_south,max_west,max_north,max_east = (43.576101,3.835258,43.629366,3.975334)
+max_south,max_west,max_north,max_east = (-90, -180,90,180)
 #%% functions
 
 # return OSM x,y tile ID from lat,lon in degrees (from http://wiki.openstreetmap.org/wiki/Slippy_map_tilenames)
@@ -101,7 +103,8 @@ for i in range(len(gpx_files)):
                 lat = float(tmp[0])
                 lon = float(tmp[1])
 
-                lat_lon_data.append([lat, lon])
+                if (lat > max_south and lat < max_north and lon > max_west and lon < max_east ):
+                    lat_lon_data.append([lat, lon])
 
 # convert to NumPy array
 lat_lon_data = np.array(lat_lon_data)
