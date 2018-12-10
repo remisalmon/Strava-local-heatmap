@@ -18,6 +18,17 @@ Python script to reproduce the Strava Global Heatmap (https://www.strava.com/hea
 
 ## Python dependencies:
 
+**Running in virtualenv**
+
+```
+VIRTUALENV=.virtualenv
+
+python3 -m venv $VIRTUALENV
+source $VIRTUALENV/bin/activate
+pip install --upgrade pip
+pip install -r ./requirements.txt
+```
+
 * Python >= 3.7.0
 * Requests >= 2.20.1
 * NumPy >= 1.15.4
