@@ -5,7 +5,8 @@ Python script to reproduce the Strava Global Heatmap (https://www.strava.com/hea
 ## Usage:
 
 * Download your GPX files from Strava to the `gpx` folder (cf. https://support.strava.com/hc/en-us/articles/216918437-Exporting-your-Data-and-Bulk-Export)
-* [Optional] To change the resolution, update `max_nb_tiles` in `strava_local_heatmap.py`
+* [Optional] To change the heatmap resolution, update `max_nb_tiles` in `strava_local_heatmap.py`
+* [Optional] To change the heatmap region, update `lat_north_bound, lon_west_bound, lat_south_bound, lon_east_bound` in `strava_local_heatmap.py`
 * Run `python3 strava_local_heatmap.py`
 * The heatmap PNG and CSV files are saved to the current directory
 
