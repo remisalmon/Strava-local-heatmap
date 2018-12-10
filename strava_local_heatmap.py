@@ -103,13 +103,16 @@ for i in range(len(gpx_files)):
                 lat = float(tmp[0])
                 lon = float(tmp[1])
 
-                if lat_south_bound < lat < lat_north_bound and lon_west_bound < lon < lon_east_bound:
-                    lat_lon_data.append([lat, lon])
+                lat_lon_data.append([lat, lon])
+
+print('processing GPX data...')
 
 # convert to NumPy array
 lat_lon_data = np.array(lat_lon_data)
 
-print('processing GPX data...')
+# crop data to bounding box
+lat_lon_data = lat_lon_data[np.logical_and(lat_lon_data[:, 0] > lat_south_bound, lat_lon_data[:, 0] < lat_north_bound), :]
+lat_lon_data = lat_lon_data[np.logical_and(lat_lon_data[:, 1] > lon_west_bound, lat_lon_data[:, 1] < lon_east_bound), :]
 
 # find good zoom level and corresponding OSM tiles x,y
 xy_tiles_minmax = np.zeros((4, 2), dtype = int)
