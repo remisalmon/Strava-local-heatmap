@@ -29,13 +29,13 @@ import skimage.color
 import skimage.filters
 
 #%% parameters
-max_nb_tiles = 5 # maximum number of tiles to construct the heatmap (heatmap max dimension is max_nb_tiles*256)
+max_nb_tiles = 5 # maximum number of OSM tiles to construct the heatmap (heatmap max dimension is max_nb_tiles*256)
 
-lat_north_bound, lon_west_bound, lat_south_bound, lon_east_bound,  = [+90, -180, -90, +180] # set lat, lon boundaries
+lat_north_bound, lon_west_bound, lat_south_bound, lon_east_bound,  = [+90, -180, -90, +180] # set lat, lon boundaries ([+90, -180, -90, +180] to keep all trackpoints)
 
-use_cumululative_distribution = True # take into account the accumulation of trackpoints in each pixel (True, False)
+use_cumululative_distribution = True # take into account the accumulation of trackpoints in each pixel (True or False)
 
-sigma_pixels = 2 # Gaussian kernel sigma (half bandwith in pixels, even number)
+sigma_pixels = 2 # Gaussian kernel sigma (half-bandwith in pixels)
 
 colormap_style = 'hot' # heatmap color map (from http://matplotlib.org/examples/color/colormaps_reference.html)
 
@@ -183,6 +183,7 @@ for x in range(x_tile_min, x_tile_max+1):
         # convert tile to 3 channels image
         tile = skimage.color.gray2rgb(tile)
 
+        # fill supertile with tile image
         i = y-y_tile_min
         j = x-x_tile_min
 
@@ -191,7 +192,7 @@ for x in range(x_tile_min, x_tile_max+1):
 # fill trackpoints data
 data = np.zeros(supertile_size[0:2])
 
-w_pixels = int(sigma_pixels)
+w_pixels = int(sigma_pixels) # add w_pixels ( = Gaussian kernel sigma) pixels of padding around the trackpoints for better visualization (data point size in pixels = 2*w_pixels+1)
 
 for k in range(len(lat_lon_data)):
     (x, y) = deg2xy(lat_lon_data[k, 0], lat_lon_data[k, 1], zoom)
@@ -199,11 +200,11 @@ for k in range(len(lat_lon_data)):
     i = int(np.round((y-y_tile_min)*tile_size[0]))
     j = int(np.round((x-x_tile_min)*tile_size[1]))
 
-    data[i-w_pixels:i+w_pixels+1, j-w_pixels:j+w_pixels+1] = data[i-w_pixels:i+w_pixels+1, j-w_pixels:j+w_pixels+1] + 1 # GPX trackpoint is sigma_pixels x sigma_pixels
+    data[i-w_pixels:i+w_pixels+1, j-w_pixels:j+w_pixels+1] = data[i-w_pixels:i+w_pixels+1, j-w_pixels:j+w_pixels+1] + 1 # ensure pixels are centered on the trackpoint
 
 # threshold trackpoints accumulation to avoid large local maxima
 if use_cumululative_distribution:
-    pixel_res = 156543.03*np.cos(np.radians(lat_lon_data[:, 0].mean()))/(2**zoom) # pixel resolution (meters/pixel)
+    pixel_res = 156543.03*np.cos(np.radians(lat_lon_data[:, 0].mean()))/(2**zoom) # pixel resolution (meters/pixel, from https://wiki.openstreetmap.org/wiki/Slippy_map_tilenames)
 
     m = (1.0/5.0)*pixel_res*len(gpx_files) # trackpoints max accumulation per pixel = (1/5) trackpoints/meters * (pixel_res) meters/pixels per (1) activity (Strava records trackpoints every 5 meters in average)
 else:
