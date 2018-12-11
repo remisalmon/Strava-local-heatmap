@@ -204,7 +204,7 @@ for k in range(len(lat_lon_data)):
 
 # threshold trackpoints accumulation to avoid large local maxima
 if use_cumululative_distribution:
-    pixel_res = 156543.03*np.cos(np.radians(lat_lon_data[:, 0].mean()))/(2**zoom) # pixel resolution (meters/pixel, from https://wiki.openstreetmap.org/wiki/Slippy_map_tilenames)
+    pixel_res = 156543.03*np.cos(np.radians(lat_lon_data[:, 0].mean()))/(2**zoom) # pixel resolution (from https://wiki.openstreetmap.org/wiki/Slippy_map_tilenames)
 
     m = (1.0/5.0)*pixel_res*len(gpx_files) # trackpoints max accumulation per pixel = (1/5) trackpoints/meters * (pixel_res) meters/pixels per (1) activity (Strava records trackpoints every 5 meters in average)
 else:
@@ -240,21 +240,17 @@ plt.imsave('heatmap.png', supertile_overlay)
 # save csv file
 print('saving heatmap.csv...')
 
-csv_data = []
-csv_data.append('lat,lon,intensity')
-
-for i in range(data.shape[0]):
-    for j in range(data.shape[1]):
-        if data[i, j] > 0.1:
-            x = x_tile_min+j/tile_size[1]
-            y = y_tile_min+i/tile_size[0]
-            
-            (lat, lon) = xy2deg(x, y, zoom)
-            
-            csv_data.append(str(lat)+','+str(lon)+','+str(data[i, j]))
-
 with open('heatmap.csv', 'w') as file:
-    for line in csv_data:
-        file.write(line+'\n')
+    file.write('lat,lon,intensity\n')
+
+    for i in range(data.shape[0]):
+        for j in range(data.shape[1]):
+            if data[i, j] > 0.1:
+                x = x_tile_min+j/tile_size[1]
+                y = y_tile_min+i/tile_size[0]
+
+                (lat, lon) = xy2deg(x, y, zoom)
+
+                file.write(str(lat)+','+str(lon)+','+str(data[i, j])+'\n')
 
 print('done')
