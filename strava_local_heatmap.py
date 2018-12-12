@@ -222,7 +222,7 @@ data = (data-data.min())/(data.max()-data.min())
 cmap = plt.get_cmap(colormap_style)
 
 data_color = cmap(data)
-data_color = data_color-cmap(0) # remove background color
+data_color[(data_color == cmap(0)).all(2)] = [0.0, 0.0, 0.0, 1.0] # remove background color
 data_color = data_color[:, :, 0:3] # remove alpha channel
 
 # create color overlay
