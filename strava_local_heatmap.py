@@ -15,7 +15,7 @@ http://matplotlib.org/examples/color/colormaps_reference.html
 http://scikit-image.org/
 """
 
-#%% librairies
+# librairies
 import os
 import glob
 import time
@@ -25,10 +25,9 @@ import requests
 import numpy as np
 import matplotlib.pyplot as plt
 
-import skimage.color
 import skimage.filters
 
-#%% parameters
+# parameters
 max_nb_tiles = 5 # maximum number of OSM tiles to construct the heatmap (heatmap max dimension is max_nb_tiles*256)
 
 lat_north_bound, lon_west_bound, lat_south_bound, lon_east_bound,  = [+90, -180, -90, +180] # set lat, lon boundaries ([+90, -180, -90, +180] to keep all trackpoints)
@@ -42,34 +41,29 @@ colormap_style = 'hot' # heatmap color map (from http://matplotlib.org/examples/
 tile_size = [256, 256] # OSM tile size (default)
 zoom = 19 # OSM max zoom level (default)
 
-#%% functions
-
-# return OSM x,y tile ID from lat,lon in degrees (from http://wiki.openstreetmap.org/wiki/Slippy_map_tilenames)
-def deg2num(lat_deg, lon_deg, zoom):
+# functions
+def deg2num(lat_deg, lon_deg, zoom): # return OSM x,y tile ID from lat,lon in degrees (from http://wiki.openstreetmap.org/wiki/Slippy_map_tilenames)
   lat_rad = np.radians(lat_deg)
   n = 2.0 ** zoom
   xtile = int((lon_deg + 180.0) / 360.0 * n)
   ytile = int((1.0 - np.log(np.tan(lat_rad) + (1 / np.cos(lat_rad))) / np.pi) / 2.0 * n)
   return(xtile, ytile)
 
-# return x,y coordinates in tile from lat,lon in degrees
-def deg2xy(lat_deg, lon_deg, zoom):
+def deg2xy(lat_deg, lon_deg, zoom): # return x,y coordinates in tile from lat,lon in degrees
     lat_rad = np.radians(lat_deg)
     n = 2.0 ** zoom
     x = (lon_deg + 180.0) / 360.0 * n
     y = (1.0 - np.log(np.tan(lat_rad) + (1 / np.cos(lat_rad))) / np.pi) / 2.0 * n
     return(x, y)
 
-# return x,y coordinates in tile from lat,lon in degrees (from http://wiki.openstreetmap.org/wiki/Slippy_map_tilenames)
-def xy2deg(xtile, ytile, zoom):
+def xy2deg(xtile, ytile, zoom): # return x,y coordinates in tile from lat,lon in degrees (from http://wiki.openstreetmap.org/wiki/Slippy_map_tilenames)
   n = 2.0 ** zoom
   lon_deg = xtile / n * 360.0 - 180.0
   lat_rad = np.arctan(np.sinh(np.pi * (1 - 2 * ytile / n)))
   lat_deg = np.degrees(lat_rad)
-  return (lat_deg, lon_deg) 
+  return (lat_deg, lon_deg)
 
-# download image
-def downloadtile(url, filename):
+def downloadtile(url, filename): # download tile image
     req = requests.get(url)
     with open(filename, 'wb') as file:
         for chunk in req.iter_content(chunk_size = 256):
@@ -78,16 +72,16 @@ def downloadtile(url, filename):
     time.sleep(0.1)
     return
 
-#%% main
+# main script
 
-# find gpx file
+# find GPX files
 gpx_files = glob.glob('./gpx/*.gpx')
 
 if not gpx_files:
     print('ERROR: no GPX files in gpx folder')
     quit()
 
-# initialize list
+# initialize latitude, longitude list
 lat_lon_data = []
 
 # read GPX files
@@ -107,8 +101,7 @@ for i in range(len(gpx_files)):
 
 print('processing GPX data...')
 
-# convert to NumPy array
-lat_lon_data = np.array(lat_lon_data)
+lat_lon_data = np.array(lat_lon_data) # convert to NumPy array
 
 # crop data to bounding box
 lat_lon_data = lat_lon_data[np.logical_and(lat_lon_data[:, 0] > lat_south_bound, lat_lon_data[:, 0] < lat_north_bound), :]
@@ -133,14 +126,13 @@ while True:
     y_tile_min = xy_tiles_minmax[:, 1].min()
     y_tile_max = xy_tiles_minmax[:, 1].max()
 
-    # check if number of tiles used is too high
+    # decrease zoom level if number of tiles used is too high
     if (x_tile_max-x_tile_min+1) > max_nb_tiles or (y_tile_max-y_tile_min+1) > max_nb_tiles:
         zoom = zoom-1
     else:
         break
 
-# total number of tiles
-tile_count = (x_tile_max-x_tile_min+1)*(y_tile_max-y_tile_min+1)
+tile_count = (x_tile_max-x_tile_min+1)*(y_tile_max-y_tile_min+1) # total number of tiles
 
 # download tiles
 if not os.path.exists('./tiles'):
@@ -165,29 +157,21 @@ supertile_size = [(y_tile_max-y_tile_min+1)*tile_size[0], (x_tile_max-x_tile_min
 
 supertile = np.zeros(supertile_size)
 
-# read tiles and fill supertile
 for x in range(x_tile_min, x_tile_max+1):
     for y in range(y_tile_min, y_tile_max+1):
         tile_filename = 'tiles/tile_'+str(zoom)+'_'+str(x)+'_'+str(y)+'.png'
 
-        tile = plt.imread(tile_filename) # uint8 data type
+        tile = plt.imread(tile_filename) # float32 data type [0,1]
 
-        # convert uint8 to float
-        tile = skimage.img_as_float(tile)
-
-        # convert tile to gray scale and invert colors
-        tile = skimage.color.rgb2gray(tile)
-
-        tile = 1-tile
-
-        # convert tile to 3 channels image
-        tile = skimage.color.gray2rgb(tile)
-
-        # fill supertile with tile image
         i = y-y_tile_min
         j = x-x_tile_min
 
-        supertile[i*tile_size[0]:i*tile_size[0]+tile_size[0], j*tile_size[1]:j*tile_size[1]+tile_size[1], :] = tile
+        supertile[i*tile_size[0]:i*tile_size[0]+tile_size[0], j*tile_size[1]:j*tile_size[1]+tile_size[1], :] = tile # fill supertile with tile image
+
+# convert supertile to grayscale and invert colors
+supertile = 0.2126*supertile[:, :, 0]+0.7152*supertile[:, :, 1]+0.0722*supertile[:, :, 2] # convert to 1 channel grayscale image
+supertile = 1-supertile
+supertile = np.dstack((supertile, supertile, supertile)) # convert back to 3 channels image
 
 # fill trackpoints data
 data = np.zeros(supertile_size[0:2])
@@ -228,9 +212,8 @@ data_color = data_color[:, :, 0:3] # remove alpha channel
 # create color overlay
 supertile_overlay = np.zeros(supertile_size)
 
-# fill color overlay
 for c in range(3):
-    supertile_overlay[:, :, c] = (1-data_color[:, :, c])*supertile[:, :, c]+data_color[:, :, c]
+    supertile_overlay[:, :, c] = (1-data_color[:, :, c])*supertile[:, :, c]+data_color[:, :, c] # fill color overlay
 
 # save image
 print('saving heatmap.png...')
