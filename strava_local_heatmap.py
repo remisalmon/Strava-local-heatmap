@@ -20,26 +20,13 @@ import os
 import glob
 import time
 import re
+import argparse
 import requests
 
 import numpy as np
 import matplotlib.pyplot as plt
 
 import skimage.filters
-
-# parameters
-max_nb_tiles = 5 # maximum number of OSM tiles to construct the heatmap (heatmap max dimension is max_nb_tiles*256)
-
-lat_north_bound, lon_west_bound, lat_south_bound, lon_east_bound,  = [+90, -180, -90, +180] # set lat, lon boundaries ([+90, -180, -90, +180] to keep all trackpoints)
-
-use_cumululative_distribution = True # take into account the accumulation of trackpoints in each pixel (True or False)
-
-sigma_pixels = 2 # Gaussian kernel sigma (half-bandwith in pixels)
-
-colormap_style = 'hot' # heatmap color map (from http://matplotlib.org/examples/color/colormaps_reference.html)
-
-tile_size = [256, 256] # OSM tile size (default)
-zoom = 19 # OSM max zoom level (default)
 
 # functions
 def deg2num(lat_deg, lon_deg, zoom): # return OSM x,y tile ID from lat,lon in degrees (from http://wiki.openstreetmap.org/wiki/Slippy_map_tilenames)
@@ -74,8 +61,49 @@ def downloadtile(url, filename): # download tile image
 
 # main script
 
-# find GPX files
-gpx_files = glob.glob('./gpx/*.gpx')
+# Analyze command line parameters
+ap = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+ap.add_argument("-g", "--gpx",default="./gpx",
+	help="GPX folder")
+ap.add_argument("-f", "--filter",default="*.gpx",
+	help="Filename filter")
+ap.add_argument("-p", "--picture-output",default="heatmap.png",
+	help="Picture output")
+ap.add_argument("-d", "--data-output",default="heatmap.csv",
+	help="Data CSV output")
+
+ap.add_argument("-c", "--colormap",default="hot",
+	help="heatmap color map (from http://matplotlib.org/examples/color/colormaps_reference.html)")
+ap.add_argument("-a", "--accumulation-distribution",default=True, type=lambda x: (str(x).lower() == 'true'),
+	help="Take into account the accumulation of trackpoints in each pixel")
+ap.add_argument("-s", "--sigma-pixels",type=int,default=2,
+	help="Gaussian kernel sigma (half-bandwith in pixels)")
+ap.add_argument("-t", "--tile-size",default=[256, 256],
+	help="OSM tile size")
+ap.add_argument("-m", "--max-nb-tiles",type=int,default=5,
+	help="Maximum number of OSM tiles to construct the heatmap (heatmap max dimension is max_nb_tiles*256)")
+ap.add_argument("-z", "--max-zoom",type=int,default=19,
+	help="OSM max zoom level")
+ap.add_argument("-b", "--limit-bounds",nargs=4,type=float,default=[+90, -180, -90, +180],
+	help="Set lat, lon boundaries +90 -180 -90 +180 to keep all trackpoints)")
+
+args = vars(ap.parse_args())
+
+#%% parameters
+max_nb_tiles = args["max_nb_tiles"]
+use_cumululative_distribution =  args["accumulation_distribution"]
+sigma_pixels = args["sigma_pixels"]
+colormap_style = args["colormap"]
+tile_size = args["tile_size"]
+zoom = args["max_zoom"]
+lat_north_bound, lon_west_bound, lat_south_bound, lon_east_bound  = args["limit_bounds"]
+picture_output = args["picture_output"]
+data_output = args["data_output"]
+gpxfolder = args["gpx"]
+gpxfilter = args["filter"]
+
+# find gpx file
+gpx_files = glob.glob('%(gpxfolder)s/%(gpxfilter)s' % locals(),recursive=True)
 
 if not gpx_files:
     print('ERROR: no GPX files in gpx folder')
@@ -216,14 +244,14 @@ for c in range(3):
     supertile_overlay[:, :, c] = (1-data_color[:, :, c])*supertile[:, :, c]+data_color[:, :, c] # fill color overlay
 
 # save image
-print('saving heatmap.png...')
+print('saving %(picture_output)s ...' % locals())
 
-plt.imsave('heatmap.png', supertile_overlay)
+plt.imsave('%(picture_output)s' % locals(), supertile_overlay)
 
 # save csv file
-print('saving heatmap.csv...')
+print('saving %(data_output)s  ...' % locals())
 
-with open('heatmap.csv', 'w') as file:
+with open('%(data_output)s' % locals(), 'w') as file:
     file.write('lat,lon,intensity\n')
 
     for i in range(data.shape[0]):
