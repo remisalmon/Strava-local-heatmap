@@ -37,7 +37,7 @@ optional arguments:
   --no-cdist            disable cumulative distribution of trackpoints
 ```
 
-Example:
+Example:  
 `strava_local_heatmap.py --gpx-dir ~/gpxfiles/ --gpx-filter *Ride*.gpx --gpx-bound 51.268318 -5.4534286 41.2632185 9.8678344`
 
 ## Output:
@@ -58,9 +58,9 @@ https://umap.openstreetmap.fr/en/map/demo-heatmap_261644 (contribution by [@bade
 ```
 To setup in a Python virtual environment, run `bash setup.sh` (run `deactivate` to exit the virtual environment)
 
-## Distribution dependencies:
+### Other dependencies:
 
-### Arch Linux
+#### Arch Linux:
 
 `sudo pacman -S tk` (cf. https://github.com/remisalmon/strava-local-heatmap/pull/3)
 
