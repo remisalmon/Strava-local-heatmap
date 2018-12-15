@@ -6,11 +6,12 @@ Optimized for cycling :bicyclist: activities
 
 ## Usage:
 
-* Download your GPX files from Strava to the `gpx` folder (see https://support.strava.com/hc/en-us/articles/216918437-Exporting-your-Data-and-Bulk-Export)
+* Download your GPX files from Strava and copy them to the `gpx` folder  
+(see https://support.strava.com/hc/en-us/articles/216918437-Exporting-your-Data-and-Bulk-Export)
 * Run `python3 strava_local_heatmap.py`
-* The **heatmap.png** and **heatmap.csv** files are saved to the current directory
+* The **heatmap.png** and **heatmap.csv** files are saved in the current directory
 
-### Command line options:
+### Command-line options:
 ```
 usage: strava_local_heatmap.py [-h] [--gpx-dir DIR] [--gpx-filter FILTER]
                                [--gpx-bound BOUND BOUND BOUND BOUND]
@@ -38,7 +39,7 @@ optional arguments:
 ```
 
 Example:  
-`strava_local_heatmap.py --gpx-dir ~/gpxfiles/ --gpx-filter *Ride*.gpx --gpx-bound 51.268318 -5.4534286 41.2632185 9.8678344`
+`strava_local_heatmap.py --gpx-filter *Ride*.gpx --gpx-bound 51.268318 -5.4534286 41.2632185 9.8678344`
 
 ## Output:
 
@@ -48,16 +49,18 @@ Example:
 **heatmap.csv visualization:**  
 https://umap.openstreetmap.fr/en/map/demo-heatmap_261644 (contribution by [@badele](https://github.com/badele))
 
-## Python dependencies:
-```
-* python >= 3.7.0
-* requests >= 2.20.1
-* matplotlib >= 3.0.2
-* numpy >= 1.15.4
-* scipy >= 1.1.0
-```
+## Installation:
+
 To setup in a Python virtual environment, run `bash setup.sh` (run `deactivate` to exit the virtual environment)
 
+### Python dependencies:
+```
+python >= 3.7.0
+requests >= 2.20.1
+matplotlib >= 3.0.2
+numpy >= 1.15.4
+scipy >= 1.1.0
+```
 ### Other dependencies:
 
 #### Arch Linux:
