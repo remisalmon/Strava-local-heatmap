@@ -36,6 +36,7 @@ optional arguments:
   --sigma-pixels SIGMA  heatmap Gaussian kernel half-bandwith in pixels
                         (default: 2)
   --no-cdist            disable cumulative distribution of trackpoints
+                        (converts to uniform distribution)
 ```
 
 Example:  
@@ -51,22 +52,25 @@ https://umap.openstreetmap.fr/en/map/demo-heatmap_261644 (contribution by [@bade
 
 ## Installation:
 
-To setup in a Python virtual environment, run `bash setup.sh` (run `deactivate` to exit the virtual environment)
+To setup a local Python virtual environment, run `bash setup.sh`  
+(`source activate .virtualenv/bin/activate` to enter the virtual environment, `deactivate` to exit)
 
 ### Python dependencies:
+
 ```
-python >= 3.7.0
+python >= 3.7.1
 requests >= 2.20.1
 matplotlib >= 3.0.2
 numpy >= 1.15.4
 scipy >= 1.1.0
 ```
+
 ### Other dependencies:
 
 #### Arch Linux:
 
 `sudo pacman -S tk` (see [here](https://github.com/remisalmon/strava-local-heatmap/pull/3#issuecomment-443541311))
 
-## Projects using strava-local-heatmap.py:
+## Projects using strava_local_heatmap.py:
 
 - [JeSuisUnDesDeux](https://gitlab.com/JeSuisUnDesDeux/jesuisundesdeux/tree/master/datas/traces)
