@@ -43,7 +43,7 @@ Example:
 ## Output:
 
 **heatmap.png:**
-![heatmap_zoom.png](images/heatmap_zoom.png)
+![heatmap_zoom.png](output_heatmap.png)
 
 **heatmap.csv visualization:**  
 https://umap.openstreetmap.fr/en/map/demo-heatmap_261644 (contribution by [@badele](https://github.com/badele))
@@ -62,7 +62,7 @@ To setup in a Python virtual environment, run `bash setup.sh` (run `deactivate` 
 
 #### Arch Linux:
 
-`sudo pacman -S tk` (cf. https://github.com/remisalmon/strava-local-heatmap/pull/3)
+`sudo pacman -S tk` (see [here](https://github.com/remisalmon/strava-local-heatmap/pull/3#issuecomment-443541311))
 
 ## Projects using strava-local-heatmap.py:
 
