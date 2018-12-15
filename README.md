@@ -52,9 +52,9 @@ https://umap.openstreetmap.fr/en/map/demo-heatmap_261644 (contribution by [@bade
 ```
 * python >= 3.7.0
 * requests >= 2.20.1
-* numpy >= 1.15.4
 * matplotlib >= 3.0.2
-* scikit-image >= 0.14.1
+* numpy >= 1.15.4
+* scipy >= 1.1.0
 ```
 To setup in a Python virtual environment, run `bash setup.sh` (run `deactivate` to exit the virtual environment)
 
