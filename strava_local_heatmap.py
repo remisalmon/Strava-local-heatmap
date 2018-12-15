@@ -10,11 +10,9 @@ http://wiki.openstreetmap.org/wiki/Slippy_map_tilenames
 http://wiki.openstreetmap.org/wiki/Tile_servers
 
 http://matplotlib.org/examples/color/colormaps_reference.html
-
-http://scikit-image.org/
 """
 
-# librairies
+# imports
 import os
 import glob
 import time
@@ -25,7 +23,7 @@ import requests
 import numpy as np
 import matplotlib.pyplot as plt
 
-import skimage.filters
+from scipy.ndimage import gaussian_filter
 
 # functions
 def deg2num(lat_deg, lon_deg, zoom): # return OSM x,y tile ID from lat,lon in degrees (from http://wiki.openstreetmap.org/wiki/Slippy_map_tilenames)
@@ -194,7 +192,7 @@ def main(args): # main script
     data[data > m] = m # threshold data to maximum accumulation of trackpoints
 
     # kernel density estimation = convolution with Gaussian kernel
-    data = skimage.filters.gaussian(data, sigma_pixels)
+    data = gaussian_filter(data, sigma_pixels)
 
     # normalize data to [0,1]
     data = (data-data.min())/(data.max()-data.min())
@@ -244,8 +242,8 @@ if __name__ == '__main__':
     parser.add_argument('--picture-output', dest = 'picture_file', default = 'heatmap.png', help = 'heatmap picture file name (default: heatmap.png)')
     parser.add_argument('--csv-output', dest = 'csv_file', default = 'heatmap.csv', help = 'heatmap CSV data file name (default: heatmap.csv)')
     parser.add_argument('--max-tiles', dest = 'maxtiles', type = int, default = 5, help = 'heatmap maximum dimension  in tiles, 1 tile = 256 pixels (default: 3)')
-    parser.add_argument('--sigma-pixels', dest = 'sigma', type = int, default = 2, help = 'heatmap Gaussian kernel half-bandwith, in pixels (default: 2)')
-    parser.add_argument('--no-cdist', dest = 'nocdist', action = 'store_true', help = 'disable cumulative distribution of trackpoints')
+    parser.add_argument('--sigma-pixels', dest = 'sigma', type = int, default = 2, help = 'heatmap Gaussian kernel half-bandwith in pixels (default: 2)')
+    parser.add_argument('--no-cdist', dest = 'nocdist', action = 'store_true', help = 'disable cumulative distribution of trackpoints (converts to uniform distribution)')
     args = parser.parse_args()
 
     # main script
