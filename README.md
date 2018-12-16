@@ -9,39 +9,40 @@ Optimized for cycling :bicyclist: activities
 * Download your GPX files from Strava and copy them to the `gpx` folder  
 (see https://support.strava.com/hc/en-us/articles/216918437-Exporting-your-Data-and-Bulk-Export)
 * Run `python3 strava_local_heatmap.py`
-* The **heatmap.png** and **heatmap.csv** files are saved to the current directory
+* The **heatmap.png** image is saved to the current directory
 
 ### Command-line options
 
 ```
 usage: strava_local_heatmap.py [-h] [--gpx-dir DIR] [--gpx-filter FILTER]
+                               [--gpx-year YEAR]
                                [--gpx-bound BOUND BOUND BOUND BOUND]
-                               [--picture-output PICTURE_FILE]
-                               [--csv-output CSV_FILE] [--max-tiles MAXTILES]
-                               [--sigma-pixels SIGMA] [--no-cdist]
+                               [--output FILENAME] [--max-tiles MAXTILES]
+                               [--sigma-pixels SIGMA] [--csv-output]
+                               [--no-cdist]
 
 optional arguments:
   -h, --help            show this help message and exit
   --gpx-dir DIR         directory containing the GPX files (default: gpx)
   --gpx-filter FILTER   regex filter for the GPX files (default: *.gpx)
+  --gpx-year YEAR       year for which to read the GPX files (default: all)
   --gpx-bound BOUND BOUND BOUND BOUND
                         heatmap bounding box as lat_north_bound,
                         lon_west_bound, lat_south_bound, lon_east_bound
                         (default: 90 -180 -90 180)
-  --picture-output PICTURE_FILE
-                        heatmap picture file name (default: heatmap.png)
-  --csv-output CSV_FILE
-                        heatmap CSV data file name (default: heatmap.csv)
+  --output FILENAME     heatmap file name (default: heatmap.png)
   --max-tiles MAXTILES  heatmap maximum dimension in tiles, 1 tile = 256
                         pixels (default: 3)
   --sigma-pixels SIGMA  heatmap Gaussian kernel half-bandwith in pixels
                         (default: 2)
+  --csv-output          enable CSV output of the heatmap in addition to the
+                        PNG image (lat,lon,intensity)
   --no-cdist            disable cumulative distribution of trackpoints
                         (converts to uniform distribution)
 ```
 
 Example:  
-`strava_local_heatmap.py --gpx-filter *Ride*.gpx --gpx-bound 51.268318 -5.4534286 41.2632185 9.8678344`
+`strava_local_heatmap.py --gpx-year 2018 --gpx-filter *Ride*.gpx --gpx-bound 51.26 -5.45 41.26 9.86`
 
 ## Output
 
