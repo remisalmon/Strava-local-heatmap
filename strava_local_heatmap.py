@@ -63,14 +63,15 @@ def main(args): # main script
     colormap = 'hot' # matplotlib color map (from http://matplotlib.org/examples/color/colormaps_reference.html)
 
     # parameters
-    gpx_dir = args.dir
-    gpx_filter = args.filter
-    lat_north_bound, lon_west_bound, lat_south_bound, lon_east_bound = args.bound
-    picture_output = args.picture_file
-    csv_output = args.csv_file
-    use_cumululative_distribution = not args.nocdist
-    max_nb_tiles = args.maxtiles
-    sigma_pixels = args.sigma
+    gpx_dir = args.dir # string
+    gpx_filter = args.filter # string
+    gpx_year = args.year # string
+    lat_north_bound, lon_west_bound, lat_south_bound, lon_east_bound = args.bound # int
+    picture_output = args.filename # string
+    max_nb_tiles = args.maxtiles # int
+    sigma_pixels = args.sigma # int
+    use_csv = args.csv # bool
+    use_cumululative_distribution = not args.nocdist # bool
 
     # find GPX files
     gpx_files = glob.glob(gpx_dir+'/'+gpx_filter)
@@ -81,19 +82,28 @@ def main(args): # main script
 
     # read GPX files
     lat_lon_data = [] # initialize latitude, longitude list
-    
+
     for i in range(len(gpx_files)):
         print('reading GPX file '+str(i+1)+'/'+str(len(gpx_files))+'...')
 
         with open(gpx_files[i]) as file:
             for line in file:
-                if '<trkpt' in line: # trackpoints latitude, longitude
-                    tmp = re.findall('-?\d*\.?\d+', line)
+                if '<time' in line: # activity date
+                    tmp = re.findall('\d{4}', line)
 
-                    lat = float(tmp[0])
-                    lon = float(tmp[1])
+                    if gpx_year in (tmp[0], 'all'):
+                        for line in file:
+                            if '<trkpt' in line: # trackpoints latitude, longitude
+                                tmp = re.findall('-?\d*\.?\d+', line)
 
-                    lat_lon_data.append([lat, lon])
+                                lat = float(tmp[0])
+                                lon = float(tmp[1])
+
+                                lat_lon_data.append([lat, lon])
+
+    if not lat_lon_data:
+        print('ERROR: no matching data found')
+        quit()
 
     print('processing GPX data...')
 
@@ -110,7 +120,7 @@ def main(args): # main script
     lat_max = lat_lon_data[:, 0].max()
     lon_min = lat_lon_data[:, 1].min()
     lon_max = lat_lon_data[:, 1].max()
-    
+
     while True:
         xy_tiles_minmax[0, :] = deg2num(lat_min, lon_min, zoom)
         xy_tiles_minmax[1, :] = deg2num(lat_min, lon_max, zoom)
@@ -139,7 +149,7 @@ def main(args): # main script
             tile_url = 'https://maps.wikimedia.org/osm-intl/'+str(zoom)+'/'+str(x)+'/'+str(y)+'.png' # (from http://wiki.openstreetmap.org/wiki/Tile_servers)
             tile_filename = './tiles/tile_'+str(zoom)+'_'+str(x)+'_'+str(y)+'.png'
 
-            if not glob.glob(tile_filename):
+            if not glob.glob(tile_filename): # check if tile already downloaded
                 i = i+1
                 print('downloading tile '+str(i)+'/'+str(tile_count)+'...')
 
@@ -211,25 +221,31 @@ def main(args): # main script
         supertile_overlay[:, :, c] = (1-data_color[:, :, c])*supertile[:, :, c]+data_color[:, :, c] # fill color overlay
 
     # save image
+    if not os.path.splitext(picture_output)[1] == '.png': # make sure we use PNG
+        picture_output = os.path.splitext(picture_output)[0]+'.png'
+    
     print('saving '+picture_output+'...')
 
     plt.imsave(picture_output, supertile_overlay)
 
     # save csv file
-    print('saving '+csv_output+'...')
-
-    with open(csv_output, 'w') as file:
-        file.write('lat,lon,intensity\n')
-
-        for i in range(data.shape[0]):
-            for j in range(data.shape[1]):
-                if data[i, j] > 0.1:
-                    x = x_tile_min+j/tile_size[1]
-                    y = y_tile_min+i/tile_size[0]
-
-                    (lat, lon) = xy2deg(x, y, zoom)
-
-                    file.write(str(lat)+','+str(lon)+','+str(data[i, j])+'\n')
+    if use_csv:
+        csv_output = picture_output[:-4]+'.csv'
+        
+        print('saving '+csv_output+'...')
+    
+        with open(csv_output, 'w') as file:
+            file.write('lat,lon,intensity\n')
+    
+            for i in range(data.shape[0]):
+                for j in range(data.shape[1]):
+                    if data[i, j] > 0.1:
+                        x = x_tile_min+j/tile_size[1]
+                        y = y_tile_min+i/tile_size[0]
+    
+                        (lat, lon) = xy2deg(x, y, zoom)
+    
+                        file.write(str(lat)+','+str(lon)+','+str(data[i, j])+'\n')
 
     print('done')
 
@@ -238,11 +254,12 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description = 'Generate a local heatmap from Strava GPX files', epilog = 'Report issues to https://github.com/remisalmon/strava-local-heatmap')
     parser.add_argument('--gpx-dir', dest = 'dir', default = 'gpx', help = 'directory containing the GPX files (default: gpx)')
     parser.add_argument('--gpx-filter', dest = 'filter', default = '*.gpx', help = 'regex filter for the GPX files (default: *.gpx)')
+    parser.add_argument('--gpx-year', dest = 'year', default = 'all', help = 'year for which to read the GPX files (default: all)')
     parser.add_argument('--gpx-bound', dest = 'bound', type = float, nargs = 4, default = [+90, -180, -90, +180], help = 'heatmap bounding box as lat_north_bound, lon_west_bound, lat_south_bound, lon_east_bound (default: 90 -180 -90 180)')
-    parser.add_argument('--picture-output', dest = 'picture_file', default = 'heatmap.png', help = 'heatmap picture file name (default: heatmap.png)')
-    parser.add_argument('--csv-output', dest = 'csv_file', default = 'heatmap.csv', help = 'heatmap CSV data file name (default: heatmap.csv)')
-    parser.add_argument('--max-tiles', dest = 'maxtiles', type = int, default = 5, help = 'heatmap maximum dimension  in tiles, 1 tile = 256 pixels (default: 3)')
+    parser.add_argument('--output', dest = 'filename', default = 'heatmap.png', help = 'heatmap file name (default: heatmap.png)')
+    parser.add_argument('--max-tiles', dest = 'maxtiles', type = int, default = 3, help = 'heatmap maximum dimension  in tiles, 1 tile = 256 pixels (default: 3)')
     parser.add_argument('--sigma-pixels', dest = 'sigma', type = int, default = 2, help = 'heatmap Gaussian kernel half-bandwith in pixels (default: 2)')
+    parser.add_argument('--csv-output', dest = 'csv', action = 'store_true', help = 'enable CSV output of the heatmap in addition to the PNG image (lat,lon,intensity)')
     parser.add_argument('--no-cdist', dest = 'nocdist', action = 'store_true', help = 'disable cumulative distribution of trackpoints (converts to uniform distribution)')
     args = parser.parse_args()
 
