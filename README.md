@@ -34,7 +34,7 @@ optional arguments:
   --max-tiles MAXTILES  heatmap maximum dimension in tiles, 1 tile = 256
                         pixels (default: 3)
   --sigma-pixels SIGMA  heatmap Gaussian kernel half-bandwith in pixels
-                        (default: 2)
+                        (default: 1)
   --csv-output          enable CSV output of the heatmap in addition to the
                         PNG image (lat,lon,intensity)
   --no-cdist            disable cumulative distribution of trackpoints

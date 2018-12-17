@@ -1,7 +1,7 @@
 """
 Remi Salmon - salmon.remi@gmail.com - November 17, 2017
 
-github.com/remisalmon/strava-local-heatmap
+https://github.com/remisalmon/strava-local-heatmap
 
 References:
 https://support.strava.com/hc/en-us/articles/216918437-Exporting-your-Data-and-Bulk-Export
@@ -131,14 +131,14 @@ def main(args): # main script
     tile_count = (x_tile_max-x_tile_min+1)*(y_tile_max-y_tile_min+1) # total number of tiles
 
     # download tiles
-    if not os.path.exists('./tiles'):
-        os.mkdir('./tiles')
+    if not os.path.exists('tiles'):
+        os.mkdir('tiles')
 
     i = 0
     for x in range(x_tile_min, x_tile_max+1):
         for y in range(y_tile_min, y_tile_max+1):
             tile_url = 'https://maps.wikimedia.org/osm-intl/'+str(zoom)+'/'+str(x)+'/'+str(y)+'.png' # (from https://wiki.openstreetmap.org/wiki/Tile_servers)
-            tile_filename = './tiles/tile_'+str(zoom)+'_'+str(x)+'_'+str(y)+'.png'
+            tile_filename = 'tiles/tile_'+str(zoom)+'_'+str(x)+'_'+str(y)+'.png'
 
             if not glob.glob(tile_filename): # check if tile already downloaded
                 i = i+1
@@ -153,8 +153,7 @@ def main(args): # main script
                 else:
                     with open(tile_filename, 'wb') as file:
                         file.write(response.read())
-
-                time.sleep(0.1)
+                    time.sleep(0.1)
 
     print('creating heatmap...')
 
@@ -259,7 +258,7 @@ if __name__ == '__main__':
     parser.add_argument('--gpx-bound', dest = 'bound', type = float, nargs = 4, default = [+90, -180, -90, +180], help = 'heatmap bounding box as lat_north_bound, lon_west_bound, lat_south_bound, lon_east_bound (default: 90 -180 -90 180)')
     parser.add_argument('--output', dest = 'filename', default = 'heatmap.png', help = 'heatmap file name (default: heatmap.png)')
     parser.add_argument('--max-tiles', dest = 'maxtiles', type = int, default = 3, help = 'heatmap maximum dimension  in tiles, 1 tile = 256 pixels (default: 3)')
-    parser.add_argument('--sigma-pixels', dest = 'sigma', type = int, default = 2, help = 'heatmap Gaussian kernel half-bandwith in pixels (default: 2)')
+    parser.add_argument('--sigma-pixels', dest = 'sigma', type = int, default = 1, help = 'heatmap Gaussian kernel half-bandwith in pixels (default: 1)')
     parser.add_argument('--csv-output', dest = 'csv', action = 'store_true', help = 'enable CSV output of the heatmap in addition to the PNG image (lat,lon,intensity)')
     parser.add_argument('--no-cdist', dest = 'nocdist', action = 'store_true', help = 'disable cumulative distribution of trackpoints (converts to uniform distribution)')
     args = parser.parse_args()
