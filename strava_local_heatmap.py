@@ -145,11 +145,14 @@ def main(args): # main script
                 print('downloading tile '+str(i)+'/'+str(tile_count)+'...')
 
                 try:
-                    urllib.request.urlretrieve(tile_url, tile_filename)
-                except urllib.error.URLError as e:
+                    response = urllib.request.urlopen(tile_url)
+                except urllib.error.URLError as e: # catches both URLError and HTTPError
                     print('ERROR: cannot download tile from server')
                     print(e.reason)
                     quit()
+                else:
+                    with open(tile_filename, 'wb') as file:
+                        file.write(response.read())
 
                 time.sleep(0.1)
 
