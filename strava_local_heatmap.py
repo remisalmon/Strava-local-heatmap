@@ -6,10 +6,10 @@ github.com/remisalmon/strava-local-heatmap
 References:
 https://support.strava.com/hc/en-us/articles/216918437-Exporting-your-Data-and-Bulk-Export
 
-http://wiki.openstreetmap.org/wiki/Slippy_map_tilenames
-http://wiki.openstreetmap.org/wiki/Tile_servers
+https://wiki.openstreetmap.org/wiki/Slippy_map_tilenames
+https://wiki.openstreetmap.org/wiki/Tile_servers
 
-http://matplotlib.org/examples/color/colormaps_reference.html
+https://matplotlib.org/examples/color/colormaps_reference.html
 """
 
 # imports
@@ -18,7 +18,7 @@ import glob
 import time
 import re
 import argparse
-import requests
+import urllib
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -26,7 +26,7 @@ import matplotlib.pyplot as plt
 from scipy.ndimage import gaussian_filter
 
 # functions
-def deg2num(lat_deg, lon_deg, zoom): # return OSM x,y tile ID from lat,lon in degrees (from http://wiki.openstreetmap.org/wiki/Slippy_map_tilenames)
+def deg2num(lat_deg, lon_deg, zoom): # return OSM x,y tile ID from lat,lon in degrees (from https://wiki.openstreetmap.org/wiki/Slippy_map_tilenames)
   lat_rad = np.radians(lat_deg)
   n = 2.0 ** zoom
   xtile = int((lon_deg + 180.0) / 360.0 * n)
@@ -40,27 +40,18 @@ def deg2xy(lat_deg, lon_deg, zoom): # return x,y coordinates in tile from lat,lo
     y = (1.0 - np.log(np.tan(lat_rad) + (1 / np.cos(lat_rad))) / np.pi) / 2.0 * n
     return(x, y)
 
-def xy2deg(xtile, ytile, zoom): # return x,y coordinates in tile from lat,lon in degrees (from http://wiki.openstreetmap.org/wiki/Slippy_map_tilenames)
+def xy2deg(xtile, ytile, zoom): # return x,y coordinates in tile from lat,lon in degrees (from https://wiki.openstreetmap.org/wiki/Slippy_map_tilenames)
   n = 2.0 ** zoom
   lon_deg = xtile / n * 360.0 - 180.0
   lat_rad = np.arctan(np.sinh(np.pi * (1 - 2 * ytile / n)))
   lat_deg = np.degrees(lat_rad)
   return (lat_deg, lon_deg)
 
-def downloadtile(url, filename): # download tile image
-    req = requests.get(url)
-    with open(filename, 'wb') as file:
-        for chunk in req.iter_content(chunk_size = 256):
-            file.write(chunk)
-            file.flush()
-    time.sleep(0.1)
-    return
-
 def main(args): # main script
     # constants
     tile_size = [256, 256] # OSM tile size (default)
     zoom = 19 # OSM max zoom level (default)
-    colormap = 'hot' # matplotlib color map (from http://matplotlib.org/examples/color/colormaps_reference.html)
+    colormap = 'hot' # matplotlib color map (from https://matplotlib.org/examples/color/colormaps_reference.html)
 
     # parameters
     gpx_dir = args.dir # string
@@ -146,14 +137,21 @@ def main(args): # main script
     i = 0
     for x in range(x_tile_min, x_tile_max+1):
         for y in range(y_tile_min, y_tile_max+1):
-            tile_url = 'https://maps.wikimedia.org/osm-intl/'+str(zoom)+'/'+str(x)+'/'+str(y)+'.png' # (from http://wiki.openstreetmap.org/wiki/Tile_servers)
+            tile_url = 'https://maps.wikimedia.org/osm-intl/'+str(zoom)+'/'+str(x)+'/'+str(y)+'.png' # (from https://wiki.openstreetmap.org/wiki/Tile_servers)
             tile_filename = './tiles/tile_'+str(zoom)+'_'+str(x)+'_'+str(y)+'.png'
 
             if not glob.glob(tile_filename): # check if tile already downloaded
                 i = i+1
                 print('downloading tile '+str(i)+'/'+str(tile_count)+'...')
 
-                downloadtile(tile_url, tile_filename)
+                try:
+                    urllib.request.urlretrieve(tile_url, tile_filename)
+                except urllib.error.URLError as e:
+                    print('ERROR: cannot download tile from server')
+                    print(e.reason)
+                    quit()
+
+                time.sleep(0.1)
 
     print('creating heatmap...')
 
@@ -223,7 +221,7 @@ def main(args): # main script
     # save image
     if not os.path.splitext(picture_output)[1] == '.png': # make sure we use PNG
         picture_output = os.path.splitext(picture_output)[0]+'.png'
-    
+
     print('saving '+picture_output+'...')
 
     plt.imsave(picture_output, supertile_overlay)
@@ -231,20 +229,20 @@ def main(args): # main script
     # save csv file
     if use_csv:
         csv_output = picture_output[:-4]+'.csv'
-        
+
         print('saving '+csv_output+'...')
-    
+
         with open(csv_output, 'w') as file:
             file.write('lat,lon,intensity\n')
-    
+
             for i in range(data.shape[0]):
                 for j in range(data.shape[1]):
                     if data[i, j] > 0.1:
                         x = x_tile_min+j/tile_size[1]
                         y = y_tile_min+i/tile_size[0]
-    
+
                         (lat, lon) = xy2deg(x, y, zoom)
-    
+
                         file.write(str(lat)+','+str(lon)+','+str(data[i, j])+'\n')
 
     print('done')

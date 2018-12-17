@@ -61,7 +61,6 @@ To setup in a local Python virtual environment, run `bash setup.sh`
 
 ```
 python >= 3.7.1
-requests >= 2.20.1
 matplotlib >= 3.0.2
 numpy >= 1.15.4
 scipy >= 1.1.0
