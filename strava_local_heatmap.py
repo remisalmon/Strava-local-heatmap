@@ -1,16 +1,22 @@
-"""
-Remi Salmon - salmon.remi@gmail.com - November 17, 2017
-
-https://github.com/remisalmon/strava-local-heatmap
-
-References:
-https://support.strava.com/hc/en-us/articles/216918437-Exporting-your-Data-and-Bulk-Export
-
-https://wiki.openstreetmap.org/wiki/Slippy_map_tilenames
-https://wiki.openstreetmap.org/wiki/Tile_servers
-
-https://matplotlib.org/examples/color/colormaps_reference.html
-"""
+# Copyright (c) 2018 Remi Salmon
+# 
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+# 
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+# 
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
 
 # imports
 import os
@@ -33,6 +39,13 @@ def deg2num(lat_deg, lon_deg, zoom): # return OSM x,y tile ID from lat,lon in de
   ytile = int((1.0 - np.log(np.tan(lat_rad) + (1 / np.cos(lat_rad))) / np.pi) / 2.0 * n)
   return(xtile, ytile)
 
+def num2deg(xtile, ytile, zoom): # return x,y coordinates in tile from lat,lon in degrees (from https://wiki.openstreetmap.org/wiki/Slippy_map_tilenames)
+  n = 2.0 ** zoom
+  lon_deg = xtile / n * 360.0 - 180.0
+  lat_rad = np.arctan(np.sinh(np.pi * (1 - 2 * ytile / n)))
+  lat_deg = np.degrees(lat_rad)
+  return (lat_deg, lon_deg)
+
 def deg2xy(lat_deg, lon_deg, zoom): # return x,y coordinates in tile from lat,lon in degrees
     lat_rad = np.radians(lat_deg)
     n = 2.0 ** zoom
@@ -40,19 +53,7 @@ def deg2xy(lat_deg, lon_deg, zoom): # return x,y coordinates in tile from lat,lo
     y = (1.0 - np.log(np.tan(lat_rad) + (1 / np.cos(lat_rad))) / np.pi) / 2.0 * n
     return(x, y)
 
-def xy2deg(xtile, ytile, zoom): # return x,y coordinates in tile from lat,lon in degrees (from https://wiki.openstreetmap.org/wiki/Slippy_map_tilenames)
-  n = 2.0 ** zoom
-  lon_deg = xtile / n * 360.0 - 180.0
-  lat_rad = np.arctan(np.sinh(np.pi * (1 - 2 * ytile / n)))
-  lat_deg = np.degrees(lat_rad)
-  return (lat_deg, lon_deg)
-
 def main(args): # main script
-    # constants
-    tile_size = [256, 256] # OSM tile size (default)
-    zoom = 19 # OSM max zoom level (default)
-    colormap = 'hot' # matplotlib color map (from https://matplotlib.org/examples/color/colormaps_reference.html)
-
     # parameters
     gpx_dir = args.dir # string
     gpx_filter = args.filter # string
@@ -63,6 +64,11 @@ def main(args): # main script
     sigma_pixels = args.sigma # int
     use_csv = args.csv # bool
     use_cumululative_distribution = not args.nocdist # bool
+
+    # constants
+    tile_size = [256, 256] # OSM tile size (default)
+    zoom = 19 # OSM max zoom level (default)
+    colormap = 'hot' # matplotlib color map (from https://matplotlib.org/examples/color/colormaps_reference.html)
 
     # find GPX files
     gpx_files = glob.glob(gpx_dir+'/'+gpx_filter)
@@ -243,7 +249,7 @@ def main(args): # main script
                         x = x_tile_min+j/tile_size[1]
                         y = y_tile_min+i/tile_size[0]
 
-                        (lat, lon) = xy2deg(x, y, zoom)
+                        (lat, lon) = num2deg(x, y, zoom)
 
                         file.write(str(lat)+','+str(lon)+','+str(data[i, j])+'\n')
 
