@@ -4,12 +4,17 @@ Python script to reproduce the Strava Global Heatmap ([www.strava.com/heatmap](h
 
 Optimized for cycling :bicyclist: activities
 
+## Features
+ 
+* Minimal Python dependencies (matplotlib/numpy/scipy)
+* Fast (17s with 300000+ trackpoints on a i5-520M @ 2.4GHz)
+
 ## Usage
 
 * Download your GPX files from Strava and copy them to the `gpx` folder  
 (see https://support.strava.com/hc/en-us/articles/216918437-Exporting-your-Data-and-Bulk-Export)
 * Run `python3 strava_local_heatmap.py`
-* The **heatmap.png** image is saved to the current directory
+* The **heatmap.png** file is saved to the current directory
 
 ### Command-line options
 
