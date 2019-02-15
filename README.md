@@ -5,9 +5,9 @@ Python script to reproduce the Strava Global Heatmap ([www.strava.com/heatmap](h
 Optimized for cycling :bicyclist: activities
 
 ## Features
- 
+
 * Minimal Python dependencies (matplotlib/numpy/scipy)
-* Fast (17s with 300000+ trackpoints on a i5-520M @ 2.4GHz)
+* Fast (17s to parse 300000+ trackpoints on a i5-520M @ 2.4GHz, 3x faster than `gpxpy.parse()`)
 
 ## Usage
 
@@ -46,6 +46,9 @@ optional arguments:
                         (converts to uniform distribution)
 ```
 
+For an explanation on the cumulative distribution function, see:  
+https://medium.com/strava-engineering/the-global-heatmap-now-6x-hotter-23fc01d301de
+
 Example:  
 `strava_local_heatmap.py --gpx-year 2018 --gpx-filter *Ride*.gpx --gpx-bound 51.26 -5.45 41.26 9.86`
 
@@ -59,13 +62,11 @@ https://umap.openstreetmap.fr/en/map/demo-heatmap_261644 (contribution by [@bade
 
 ## Installation
 
-To setup in a local Python virtual environment, run `bash setup.sh`  
-(`source activate .virtualenv/bin/activate` to enter the virtual environment, `deactivate` to exit)
+To setup in a local Python virtual environment, run `setup.sh`  
 
 ### Python dependencies
 
 ```
-python >= 3.7.1
 matplotlib >= 3.0.2
 numpy >= 1.15.4
 scipy >= 1.1.0
@@ -73,9 +74,8 @@ scipy >= 1.1.0
 
 ### Other dependencies
 
-#### Arch Linux
-
-`sudo pacman -S tk` (see [here](https://github.com/remisalmon/strava-local-heatmap/pull/3#issuecomment-443541311))
+Arch Linux (see [here](https://github.com/remisalmon/strava-local-heatmap/pull/3#issuecomment-443541311)):  
+`sudo pacman -S tk`
 
 ## Projects using strava_local_heatmap.py
 
