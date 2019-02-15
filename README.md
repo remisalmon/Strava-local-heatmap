@@ -2,6 +2,8 @@
 
 Python script to reproduce the Strava Global Heatmap ([www.strava.com/heatmap](https://www.strava.com/heatmap)) with local GPX data
 
+For an interactive version, check out [github.com/remisalmon/Strava-local-heatmap-browser](https://github.com/remisalmon/Strava-local-heatmap-browser)
+
 Optimized for cycling :bicyclist: activities
 
 ## Features
@@ -74,8 +76,7 @@ scipy >= 1.1.0
 
 ### Other dependencies
 
-Arch Linux (see [here](https://github.com/remisalmon/strava-local-heatmap/pull/3#issuecomment-443541311)):  
-`sudo pacman -S tk`
+Arch Linux (see [here](https://github.com/remisalmon/strava-local-heatmap/pull/3#issuecomment-443541311)): `sudo pacman -S tk`
 
 ## Projects using strava_local_heatmap.py
 
