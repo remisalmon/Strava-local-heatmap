@@ -9,14 +9,14 @@ Optimized for cycling :bicyclist: activities
 ## Features
 
 * Minimal Python dependencies (matplotlib/numpy/scipy)
-* Fast (17s to parse 300000+ trackpoints on a i5-520M @ 2.4GHz, 3x faster than `gpxpy.parse()`)
+* Fast (3x faster than `gpxpy.parse()`)
 
 ## Usage
 
-* Download your GPX files from Strava and copy them to the `gpx` folder  
+* Download your GPX files from Strava and add them to the `gpx` folder  
 (see https://support.strava.com/hc/en-us/articles/216918437-Exporting-your-Data-and-Bulk-Export)
-* Run `python3 strava_local_heatmap.py`
-* The **heatmap.png** file is saved to the current directory
+* Run `python3 strava_local_heatmap.py`  
+* The **heatmap.png** image is saved to the current directory
 
 ### Command-line options
 
@@ -59,12 +59,14 @@ Example:
 **heatmap.png**  
 ![heatmap_zoom.png](output_heatmap.png)
 
-**heatmap.csv visualization**  
-https://umap.openstreetmap.fr/en/map/demo-heatmap_261644 (contribution by [@badele](https://github.com/badele))
+**heatmap.csv**  
+See https://umap.openstreetmap.fr/en/map/demo-heatmap_261644 (contribution by [@badele](https://github.com/badele))
 
 ## Installation
 
 To setup in a local Python virtual environment, run `setup.sh`  
+
+To activate the virtual environment, run `source virtualenv/bin/activate`
 
 ### Python dependencies
 
