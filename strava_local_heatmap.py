@@ -1,15 +1,15 @@
 # Copyright (c) 2018 Remi Salmon
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
 # in the Software without restriction, including without limitation the rights
 # to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 # copies of the Software, and to permit persons to whom the Software is
 # furnished to do so, subject to the following conditions:
-# 
+#
 # The above copyright notice and this permission notice shall be included in all
 # copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 # FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -20,16 +20,14 @@
 
 # imports
 import os
+import re
 import glob
 import time
-import re
-import argparse
 import urllib
+import argparse
 
 import numpy as np
 import matplotlib.pyplot as plt
-
-from scipy.ndimage import gaussian_filter
 
 # functions
 def deg2num(lat_deg, lon_deg, zoom): # return OSM x,y tile ID from lat,lon in degrees (from https://wiki.openstreetmap.org/wiki/Slippy_map_tilenames)
@@ -52,6 +50,15 @@ def deg2xy(lat_deg, lon_deg, zoom): # return x,y coordinates in tile from lat,lo
     x = (lon_deg + 180.0) / 360.0 * n
     y = (1.0 - np.log(np.tan(lat_rad) + (1 / np.cos(lat_rad))) / np.pi) / 2.0 * n
     return(x, y)
+
+def box_filter(image, w_box): # image = 2d numpy array, w_box = int
+    image_padded = np.pad(image, max(int((w_box-1)/2), 1), mode = 'edge')
+
+    for i in range(image.shape[0]):
+        for j in range(image.shape[1]):
+            image[i ,j] = np.sum(image_padded[i:i+w_box, j:j+w_box])/(w_box**2)
+
+    return(image)
 
 def main(args): # main script
     # parameters
@@ -211,8 +218,10 @@ def main(args): # main script
 
     data[data > m] = m # threshold data to maximum accumulation of trackpoints
 
-    # kernel density estimation = convolution with Gaussian kernel
-    data = gaussian_filter(data, sigma_pixels)
+    # kernel density estimation = convolution with almost-Gaussian kernel
+    w_filter = int(np.sqrt(12.0*sigma_pixels**2+1.0)) # (from https://www.peterkovesi.com/papers/FastGaussianSmoothing.pdf)
+
+    data = box_filter(data, w_filter)
 
     # normalize data to [0,1]
     data = (data-data.min())/(data.max()-data.min())

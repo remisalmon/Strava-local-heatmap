@@ -8,7 +8,7 @@ Optimized for cycling :bicyclist: activities
 
 ## Features
 
-* Minimal Python dependencies (matplotlib/numpy/scipy)
+* Minimal Python dependencies (matplotlib+numpy)
 * Fast (3x faster than `gpxpy.parse()`)
 
 ## Usage
@@ -73,7 +73,6 @@ To activate the virtual environment, run `source virtualenv/bin/activate`
 ```
 matplotlib >= 3.0.2
 numpy >= 1.15.4
-scipy >= 1.1.0
 ```
 
 ### Other dependencies
