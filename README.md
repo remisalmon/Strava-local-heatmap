@@ -71,8 +71,8 @@ To activate the virtual environment, run `source virtualenv/bin/activate`
 ### Python dependencies
 
 ```
-matplotlib >= 3.0.2
-numpy >= 1.15.4
+matplotlib==3.0.2
+numpy==1.15.4
 ```
 
 ### Other dependencies
