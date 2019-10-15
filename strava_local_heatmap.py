@@ -60,6 +60,31 @@ def box_filter(image, w_box): # image = 2d numpy array, w_box = int
 
     return(image)
 
+def download_tile(tile_url, tile_file):
+    request = urllib.request.Request(url = tile_url, data = None, headers = {'User-Agent':'Mozilla/5.0'})
+
+    try:
+        response = urllib.request.urlopen(request)
+    except urllib.error.URLError as e: # (from https://docs.python.org/3/howto/urllib2.html)
+        print('ERROR cannot download tile from OSM server')
+
+        if hasattr(e, 'reason'):
+            print(e.reason)
+
+        elif hasattr(e, 'code'):
+            print(e.code)
+
+        status = False
+    else:
+        with open(tile_file, 'wb') as file:
+            file.write(response.read())
+
+        time.sleep(0.1)
+
+        status = True
+
+    return(status)
+
 def main(args): # main script
     # parameters
     gpx_dir = args.dir # string
@@ -81,7 +106,7 @@ def main(args): # main script
     gpx_files = glob.glob(gpx_dir+'/'+gpx_filter)
 
     if not gpx_files:
-        print('ERROR: no GPX files in '+gpx_dir)
+        print('ERROR no GPX files in '+gpx_dir)
         quit()
 
     # read GPX files
@@ -106,7 +131,7 @@ def main(args): # main script
                                 lat_lon_data.append([lat, lon])
 
     if not lat_lon_data:
-        print('ERROR: no matching data found')
+        print('ERROR no matching data found')
         quit()
 
     print('processing GPX data...')
@@ -137,7 +162,7 @@ def main(args): # main script
         y_tile_max = xy_tiles_minmax[:, 1].max()
 
         if (x_tile_max-x_tile_min+1) > max_nb_tiles or (y_tile_max-y_tile_min+1) > max_nb_tiles:
-            zoom = zoom-1 # decrease zoom level if number of tiles used is too high
+            zoom -= 1 # decrease zoom level if number of tiles used is too high
         else:
             break
 
@@ -151,26 +176,18 @@ def main(args): # main script
     for x in range(x_tile_min, x_tile_max+1):
         for y in range(y_tile_min, y_tile_max+1):
             tile_url = 'https://maps.wikimedia.org/osm-intl/'+str(zoom)+'/'+str(x)+'/'+str(y)+'.png' # (from https://wiki.openstreetmap.org/wiki/Tile_servers)
-            tile_filename = 'tiles/tile_'+str(zoom)+'_'+str(x)+'_'+str(y)+'.png'
 
-            if not glob.glob(tile_filename): # check if tile already downloaded
-                i = i+1
+            tile_file = 'tiles/tile_'+str(zoom)+'_'+str(x)+'_'+str(y)+'.png'
+
+            if not glob.glob(tile_file): # check if tile already downloaded
+                i += 1
+
                 print('downloading tile '+str(i)+'/'+str(tile_count)+'...')
 
-                request = urllib.request.Request(url = tile_url, data = None, headers = {'User-Agent':'Mozilla/5.0'})
+                if not download_tile(tile_url, tile_file):
+                    tile_image = np.ones((tile_size, tile_size, 3))
 
-                try:
-                    response = urllib.request.urlopen(request)
-                except urllib.error.URLError as e: # catches both URLError and HTTPError
-                    print('ERROR: cannot download tile from server')
-                    print(e.reason)
-
-                    quit()
-                else:
-                    with open(tile_filename, 'wb') as file:
-                        file.write(response.read())
-
-                    time.sleep(0.1)
+                    plt.imsave(tile_file, tile_image)
 
     print('creating heatmap...')
 
@@ -188,11 +205,13 @@ def main(args): # main script
             i = y-y_tile_min
             j = x-x_tile_min
 
-            supertile[i*tile_size:i*tile_size+tile_size, j*tile_size:j*tile_size+tile_size, :] = tile # fill supertile with tile image
+            supertile[i*tile_size:i*tile_size+tile_size, j*tile_size:j*tile_size+tile_size, :] = tile[:, :, :3] # fill supertile with tile image
 
     # convert supertile to grayscale and invert colors
     supertile = 0.2126*supertile[:, :, 0]+0.7152*supertile[:, :, 1]+0.0722*supertile[:, :, 2] # convert to 1 channel grayscale image
+
     supertile = 1-supertile # invert colors
+
     supertile = np.dstack((supertile, supertile, supertile)) # convert back to 3 channels image
 
     # fill trackpoints data
@@ -201,7 +220,7 @@ def main(args): # main script
     w_pixels = int(sigma_pixels) # add w_pixels (= Gaussian kernel sigma) pixels of padding around the trackpoints for better visualization
 
     for k in range(len(lat_lon_data)):
-        (x, y) = deg2xy(lat_lon_data[k, 0], lat_lon_data[k, 1], zoom)
+        x, y = deg2xy(lat_lon_data[k, 0], lat_lon_data[k, 1], zoom)
 
         i = int(np.round((y-y_tile_min)*tile_size))
         j = int(np.round((x-x_tile_min)*tile_size))
@@ -210,7 +229,7 @@ def main(args): # main script
 
     # threshold trackpoints accumulation to avoid large local maxima
     if use_cumululative_distribution:
-        pixel_res = 156543.03*np.cos(np.radians(lat_lon_data[:, 0].mean()))/(2**zoom) # pixel resolution (from https://wiki.openstreetmap.org/wiki/Slippy_map_tilenames)
+        pixel_res = 156543.03*np.cos(np.radians(np.mean(lat_lon_data[:, 0])))/(2**zoom) # pixel resolution (from https://wiki.openstreetmap.org/wiki/Slippy_map_tilenames)
 
         m = (1.0/5.0)*pixel_res*len(gpx_files) # trackpoints max accumulation per pixel = (1/5) trackpoints/meters * (pixel_res) meters/pixels per (1) activity (Strava records trackpoints every 5 meters in average for cycling activites)
     else:
@@ -262,7 +281,7 @@ def main(args): # main script
                         x = x_tile_min+j/tile_size
                         y = y_tile_min+i/tile_size
 
-                        (lat, lon) = num2deg(x, y, zoom)
+                        lat, lon = num2deg(x, y, zoom)
 
                         file.write(str(lat)+','+str(lon)+','+str(data[i, j])+'\n')
 
@@ -280,6 +299,7 @@ if __name__ == '__main__':
     parser.add_argument('--sigma-pixels', dest = 'sigma', type = int, default = 1, help = 'heatmap Gaussian kernel half-bandwith in pixels (default: 1)')
     parser.add_argument('--csv-output', dest = 'csv', action = 'store_true', help = 'enable CSV output of the heatmap in addition to the PNG image (lat,lon,intensity)')
     parser.add_argument('--no-cdist', dest = 'nocdist', action = 'store_true', help = 'disable cumulative distribution of trackpoints (converts to uniform distribution)')
+
     args = parser.parse_args()
 
     # main script
