@@ -31,7 +31,7 @@ usage: strava_local_heatmap.py [-h] [--gpx-dir DIR] [--gpx-filter FILTER]
 optional arguments:
   -h, --help            show this help message and exit
   --gpx-dir DIR         directory containing the GPX files (default: gpx)
-  --gpx-filter FILTER   regex filter for the GPX files (default: *.gpx)
+  --gpx-filter FILTER   glob filter for the GPX files (default: *.gpx)
   --gpx-year YEAR       year for which to read the GPX files (default: all)
   --gpx-bound BOUND BOUND BOUND BOUND
                         heatmap bounding box as lat_north_bound,
@@ -71,8 +71,8 @@ To activate the virtual environment, run `source virtualenv/bin/activate`
 ### Python dependencies
 
 ```
-matplotlib >= 3.0.2
-numpy >= 1.15.4
+matplotlib==3.0.2
+numpy==1.15.4
 ```
 
 ### Other dependencies
