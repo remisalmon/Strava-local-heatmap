@@ -30,9 +30,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # constants
-OSM_TILE_SIZE = 256 # OSM tile size in pixels
-OSM_MAX_ZOOM = 19 # OSM max zoom level
-OSM_COLORMAP = 'hot' # matplotlib color map (from https://matplotlib.org/examples/color/colormaps_reference.html)
+PLT_COLORMAP = 'hot' # matplotlib color map (from https://matplotlib.org/examples/color/colormaps_reference.html)
+
+OSM_TILE_SIZE = 256 # OSM tile size in pixels (do not change)
+OSM_MAX_ZOOM = 19 # OSM max zoom level (do not change)
 
 # functions
 def deg2num(lat_deg, lon_deg, zoom): # return OSM tile x,y from lat,lon in degrees (from https://wiki.openstreetmap.org/wiki/Slippy_map_tilenames)
@@ -104,6 +105,12 @@ def main(args):
 
     zoom = OSM_MAX_ZOOM
 
+    try:
+        cmap = plt.get_cmap(PLT_COLORMAP)
+    except:
+        print('ERROR colormap '+PLT_COLORMAP+' does not exists')
+        quit()
+
     # find GPX files
     gpx_files = glob.glob(gpx_dir+'/'+gpx_filter)
 
@@ -163,8 +170,8 @@ def main(args):
         y_tile_min = xy_tiles_minmax[:, 1].min()
         y_tile_max = xy_tiles_minmax[:, 1].max()
 
-        if (x_tile_max-x_tile_min+1) > max_nb_tiles or (y_tile_max-y_tile_min+1) > max_nb_tiles:
-            zoom -= 1 # decrease zoom level if number of tiles used is too high
+        if (x_tile_max-x_tile_min+1) > max_nb_tiles or (y_tile_max-y_tile_min+1) > max_nb_tiles: # decrease zoom level if number of tiles used is too high
+            zoom -= 1
         else:
             break
 
@@ -248,10 +255,10 @@ def main(args):
     data = (data-data.min())/(data.max()-data.min())
 
     # colorize data
-    cmap = plt.get_cmap(OSM_COLORMAP)
-
     data_color = cmap(data)
+
     data_color[(data_color == cmap(0)).all(2)] = [0.0, 0.0, 0.0, 1.0] # remove background color
+
     data_color = data_color[:, :, :3] # remove alpha channel
 
     # create color overlay
@@ -304,5 +311,5 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    # main script
+    # run main
     main(args)
