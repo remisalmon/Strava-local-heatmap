@@ -29,29 +29,34 @@ import argparse
 import numpy as np
 import matplotlib.pyplot as plt
 
+# constants
+OSM_TILE_SIZE = 256 # OSM tile size in pixels
+OSM_MAX_ZOOM = 19 # OSM max zoom level
+OSM_COLORMAP = 'hot' # matplotlib color map (from https://matplotlib.org/examples/color/colormaps_reference.html)
+
 # functions
-def deg2num(lat_deg, lon_deg, zoom): # return OSM x,y tile ID from lat,lon in degrees (from https://wiki.openstreetmap.org/wiki/Slippy_map_tilenames)
+def deg2num(lat_deg, lon_deg, zoom): # return OSM tile x,y from lat,lon in degrees (from https://wiki.openstreetmap.org/wiki/Slippy_map_tilenames)
   lat_rad = np.radians(lat_deg)
   n = 2.0 ** zoom
   xtile = int((lon_deg + 180.0) / 360.0 * n)
   ytile = int((1.0 - np.log(np.tan(lat_rad) + (1 / np.cos(lat_rad))) / np.pi) / 2.0 * n)
   return(xtile, ytile)
 
-def num2deg(xtile, ytile, zoom): # return x,y coordinates in tile from lat,lon in degrees (from https://wiki.openstreetmap.org/wiki/Slippy_map_tilenames)
+def num2deg(xtile, ytile, zoom): # return lat,lon in degrees from OSM tile x,y (from https://wiki.openstreetmap.org/wiki/Slippy_map_tilenames)
   n = 2.0 ** zoom
   lon_deg = xtile / n * 360.0 - 180.0
   lat_rad = np.arctan(np.sinh(np.pi * (1 - 2 * ytile / n)))
   lat_deg = np.degrees(lat_rad)
   return (lat_deg, lon_deg)
 
-def deg2xy(lat_deg, lon_deg, zoom): # return x,y coordinates in tile from lat,lon in degrees
+def deg2xy(lat_deg, lon_deg, zoom): # return OSM global x,y coordinates from lat,lon in degrees
     lat_rad = np.radians(lat_deg)
     n = 2.0 ** zoom
     x = (lon_deg + 180.0) / 360.0 * n
     y = (1.0 - np.log(np.tan(lat_rad) + (1 / np.cos(lat_rad))) / np.pi) / 2.0 * n
     return(x, y)
 
-def box_filter(image, w_box): # image = 2d numpy array, w_box = int
+def box_filter(image, w_box): # return image filtered with box filter
     image_padded = np.pad(image, max(int((w_box-1)/2), 1), mode = 'edge')
 
     for i in range(image.shape[0]):
@@ -60,7 +65,7 @@ def box_filter(image, w_box): # image = 2d numpy array, w_box = int
 
     return(image)
 
-def download_tile(tile_url, tile_file):
+def download_tile(tile_url, tile_file): # download image from url to file
     request = urllib.request.Request(url = tile_url, data = None, headers = {'User-Agent':'Mozilla/5.0'})
 
     try:
@@ -85,7 +90,7 @@ def download_tile(tile_url, tile_file):
 
     return(status)
 
-def main(args): # main script
+def main(args):
     # parameters
     gpx_dir = args.dir # string
     gpx_filter = args.filter # string
@@ -97,10 +102,7 @@ def main(args): # main script
     use_csv = args.csv # bool
     use_cumululative_distribution = not args.nocdist # bool
 
-    # constants
-    tile_size = 256 # OSM tile size in pixels (default)
-    zoom = 19 # OSM max zoom level (default)
-    colormap = 'hot' # matplotlib color map (from https://matplotlib.org/examples/color/colormaps_reference.html)
+    zoom = OSM_MAX_ZOOM
 
     # find GPX files
     gpx_files = glob.glob(gpx_dir+'/'+gpx_filter)
@@ -185,14 +187,14 @@ def main(args): # main script
                 print('downloading tile '+str(i)+'/'+str(tile_count)+'...')
 
                 if not download_tile(tile_url, tile_file):
-                    tile_image = np.ones((tile_size, tile_size, 3))
+                    tile_image = np.ones((OSM_TILE_SIZE, OSM_TILE_SIZE, 3))
 
                     plt.imsave(tile_file, tile_image)
 
     print('creating heatmap...')
 
     # create supertile
-    supertile_size = ((y_tile_max-y_tile_min+1)*tile_size, (x_tile_max-x_tile_min+1)*tile_size, 3)
+    supertile_size = ((y_tile_max-y_tile_min+1)*OSM_TILE_SIZE, (x_tile_max-x_tile_min+1)*OSM_TILE_SIZE, 3)
 
     supertile = np.zeros(supertile_size)
 
@@ -205,7 +207,7 @@ def main(args): # main script
             i = y-y_tile_min
             j = x-x_tile_min
 
-            supertile[i*tile_size:i*tile_size+tile_size, j*tile_size:j*tile_size+tile_size, :] = tile[:, :, :3] # fill supertile with tile image
+            supertile[i*OSM_TILE_SIZE:i*OSM_TILE_SIZE+OSM_TILE_SIZE, j*OSM_TILE_SIZE:j*OSM_TILE_SIZE+OSM_TILE_SIZE, :] = tile[:, :, :3] # fill supertile with tile image
 
     # convert supertile to grayscale and invert colors
     supertile = 0.2126*supertile[:, :, 0]+0.7152*supertile[:, :, 1]+0.0722*supertile[:, :, 2] # convert to 1 channel grayscale image
@@ -222,8 +224,8 @@ def main(args): # main script
     for k in range(len(lat_lon_data)):
         x, y = deg2xy(lat_lon_data[k, 0], lat_lon_data[k, 1], zoom)
 
-        i = int(np.round((y-y_tile_min)*tile_size))
-        j = int(np.round((x-x_tile_min)*tile_size))
+        i = int(np.round((y-y_tile_min)*OSM_TILE_SIZE))
+        j = int(np.round((x-x_tile_min)*OSM_TILE_SIZE))
 
         data[i-w_pixels:i+w_pixels+1, j-w_pixels:j+w_pixels+1] = data[i-w_pixels:i+w_pixels+1, j-w_pixels:j+w_pixels+1] + 1 # ensure pixels are centered on the trackpoint
 
@@ -246,7 +248,7 @@ def main(args): # main script
     data = (data-data.min())/(data.max()-data.min())
 
     # colorize data
-    cmap = plt.get_cmap(colormap)
+    cmap = plt.get_cmap(OSM_COLORMAP)
 
     data_color = cmap(data)
     data_color[(data_color == cmap(0)).all(2)] = [0.0, 0.0, 0.0, 1.0] # remove background color
@@ -278,8 +280,8 @@ def main(args): # main script
             for i in range(data.shape[0]):
                 for j in range(data.shape[1]):
                     if data[i, j] > 0.1:
-                        x = x_tile_min+j/tile_size
-                        y = y_tile_min+i/tile_size
+                        x = x_tile_min+j/OSM_TILE_SIZE
+                        y = y_tile_min+i/OSM_TILE_SIZE
 
                         lat, lon = num2deg(x, y, zoom)
 
@@ -291,7 +293,7 @@ if __name__ == '__main__':
     # command line parameters
     parser = argparse.ArgumentParser(description = 'Generate a local heatmap from Strava GPX files', epilog = 'Report issues to https://github.com/remisalmon/strava-local-heatmap')
     parser.add_argument('--gpx-dir', dest = 'dir', default = 'gpx', help = 'directory containing the GPX files (default: gpx)')
-    parser.add_argument('--gpx-filter', dest = 'filter', default = '*.gpx', help = 'regex filter for the GPX files (default: *.gpx)')
+    parser.add_argument('--gpx-filter', dest = 'filter', default = '*.gpx', help = 'glob filter for the GPX files (default: *.gpx)')
     parser.add_argument('--gpx-year', dest = 'year', default = 'all', help = 'year for which to read the GPX files (default: all)')
     parser.add_argument('--gpx-bound', dest = 'bound', type = float, nargs = 4, default = [+90, -180, -90, +180], help = 'heatmap bounding box as lat_north_bound, lon_west_bound, lat_south_bound, lon_east_bound (default: 90 -180 -90 180)')
     parser.add_argument('--output', dest = 'filename', default = 'heatmap.png', help = 'heatmap file name (default: heatmap.png)')
