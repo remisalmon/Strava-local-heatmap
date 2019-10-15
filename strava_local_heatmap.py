@@ -66,7 +66,7 @@ def main(args): # main script
     use_cumululative_distribution = not args.nocdist # bool
 
     # constants
-    tile_size = [256, 256] # OSM tile size (default)
+    tile_size = 256 # OSM tile size in pixels (default)
     zoom = 19 # OSM max zoom level (default)
     colormap = 'hot' # matplotlib color map (from https://matplotlib.org/examples/color/colormaps_reference.html)
 
@@ -151,20 +151,22 @@ def main(args): # main script
                 print('downloading tile '+str(i)+'/'+str(tile_count)+'...')
 
                 try:
-                    response = urllib.request.urlopen(tile_url)
+                    response = urllib.request.urlopen(url = tile_url, headers = {'User-Agent':'Mozilla/5.0'})
                 except urllib.error.URLError as e: # catches both URLError and HTTPError
                     print('ERROR: cannot download tile from server')
                     print(e.reason)
+
                     quit()
                 else:
                     with open(tile_filename, 'wb') as file:
                         file.write(response.read())
+
                     time.sleep(0.1)
 
     print('creating heatmap...')
 
     # create supertile
-    supertile_size = [(y_tile_max-y_tile_min+1)*tile_size[0], (x_tile_max-x_tile_min+1)*tile_size[1], 3]
+    supertile_size = ((y_tile_max-y_tile_min+1)*tile_size, (x_tile_max-x_tile_min+1)*tile_size, 3)
 
     supertile = np.zeros(supertile_size)
 
@@ -172,12 +174,12 @@ def main(args): # main script
         for y in range(y_tile_min, y_tile_max+1):
             tile_filename = 'tiles/tile_'+str(zoom)+'_'+str(x)+'_'+str(y)+'.png'
 
-            tile = plt.imread(tile_filename) # float data type ([0,1])
+            tile = plt.imread(tile_filename) # float ([0,1])
 
             i = y-y_tile_min
             j = x-x_tile_min
 
-            supertile[i*tile_size[0]:i*tile_size[0]+tile_size[0], j*tile_size[1]:j*tile_size[1]+tile_size[1], :] = tile # fill supertile with tile image
+            supertile[i*tile_size:i*tile_size+tile_size, j*tile_size:j*tile_size+tile_size, :] = tile # fill supertile with tile image
 
     # convert supertile to grayscale and invert colors
     supertile = 0.2126*supertile[:, :, 0]+0.7152*supertile[:, :, 1]+0.0722*supertile[:, :, 2] # convert to 1 channel grayscale image
@@ -185,15 +187,15 @@ def main(args): # main script
     supertile = np.dstack((supertile, supertile, supertile)) # convert back to 3 channels image
 
     # fill trackpoints data
-    data = np.zeros(supertile_size[0:2])
+    data = np.zeros(supertile_size[:2])
 
     w_pixels = int(sigma_pixels) # add w_pixels (= Gaussian kernel sigma) pixels of padding around the trackpoints for better visualization
 
     for k in range(len(lat_lon_data)):
         (x, y) = deg2xy(lat_lon_data[k, 0], lat_lon_data[k, 1], zoom)
 
-        i = int(np.round((y-y_tile_min)*tile_size[0]))
-        j = int(np.round((x-x_tile_min)*tile_size[1]))
+        i = int(np.round((y-y_tile_min)*tile_size))
+        j = int(np.round((x-x_tile_min)*tile_size))
 
         data[i-w_pixels:i+w_pixels+1, j-w_pixels:j+w_pixels+1] = data[i-w_pixels:i+w_pixels+1, j-w_pixels:j+w_pixels+1] + 1 # ensure pixels are centered on the trackpoint
 
@@ -218,13 +220,13 @@ def main(args): # main script
 
     data_color = cmap(data)
     data_color[(data_color == cmap(0)).all(2)] = [0.0, 0.0, 0.0, 1.0] # remove background color
-    data_color = data_color[:, :, 0:3] # remove alpha channel
+    data_color = data_color[:, :, :3] # remove alpha channel
 
     # create color overlay
     supertile_overlay = np.zeros(supertile_size)
 
     for c in range(3):
-        supertile_overlay[:, :, c] = (1-data_color[:, :, c])*supertile[:, :, c]+data_color[:, :, c] # fill color overlay
+        supertile_overlay[:, :, c] = (1.0-data_color[:, :, c])*supertile[:, :, c]+data_color[:, :, c] # fill color overlay
 
     # save image
     if not os.path.splitext(picture_output)[1] == '.png': # make sure we use PNG
@@ -236,7 +238,7 @@ def main(args): # main script
 
     # save csv file
     if use_csv:
-        csv_output = picture_output[:-4]+'.csv'
+        csv_output = os.path.splitext(picture_output)[0]+'.csv'
 
         print('saving '+csv_output+'...')
 
@@ -246,8 +248,8 @@ def main(args): # main script
             for i in range(data.shape[0]):
                 for j in range(data.shape[1]):
                     if data[i, j] > 0.1:
-                        x = x_tile_min+j/tile_size[1]
-                        y = y_tile_min+i/tile_size[0]
+                        x = x_tile_min+j/tile_size
+                        y = y_tile_min+i/tile_size
 
                         (lat, lon) = num2deg(x, y, zoom)
 
