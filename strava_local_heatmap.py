@@ -150,8 +150,10 @@ def main(args): # main script
                 i = i+1
                 print('downloading tile '+str(i)+'/'+str(tile_count)+'...')
 
+                request = urllib.request.Request(url = tile_url, data = None, headers = {'User-Agent':'Mozilla/5.0'})
+
                 try:
-                    response = urllib.request.urlopen(url = tile_url, headers = {'User-Agent':'Mozilla/5.0'})
+                    response = urllib.request.urlopen(request)
                 except urllib.error.URLError as e: # catches both URLError and HTTPError
                     print('ERROR: cannot download tile from server')
                     print(e.reason)
