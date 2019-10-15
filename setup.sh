@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VIRTUALENV=.virtualenv
+VIRTUALENV=virtualenv
 
 python3 -m venv $VIRTUALENV
 
@@ -8,4 +8,4 @@ source $VIRTUALENV/bin/activate
 
 pip install --upgrade pip
 
-pip install -r requirements.txt
+pip install --requirement requirements.txt
