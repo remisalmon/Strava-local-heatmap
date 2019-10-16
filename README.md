@@ -13,58 +13,54 @@ Optimized for cycling :bicyclist: activities
 
 ## Usage
 
-* Download your GPX files from Strava and add them to the `gpx` folder  
+* Download your GPX files from Strava and add them to the `gpx` folder
 (see https://support.strava.com/hc/en-us/articles/216918437-Exporting-your-Data-and-Bulk-Export)
-* Run `python3 strava_local_heatmap.py`  
+* Run `python3 strava_local_heatmap.py`
 * The **heatmap.png** image is saved to the current directory
 
 ### Command-line options
 
 ```
-usage: strava_local_heatmap.py [-h] [--gpx-dir DIR] [--gpx-filter FILTER]
+usage: strava_local_heatmap.py [-h] [--gpx-dir DIR] [--gpx-filter GLOB]
                                [--gpx-year YEAR]
                                [--gpx-bound BOUND BOUND BOUND BOUND]
-                               [--output FILENAME] [--max-tiles MAXTILES]
-                               [--sigma-pixels SIGMA] [--csv-output]
-                               [--no-cdist]
+                               [--output FILE] [--csv] [--scale SCALE]
+                               [--bandwith SIGMA] [--no-cdist]
 
 optional arguments:
   -h, --help            show this help message and exit
-  --gpx-dir DIR         directory containing the GPX files (default: gpx)
-  --gpx-filter FILTER   glob filter for the GPX files (default: *.gpx)
-  --gpx-year YEAR       year for which to read the GPX files (default: all)
+  --gpx-dir DIR         GPX files directory (default: gpx)
+  --gpx-filter GLOB     GPX files glob filter (default: *.gpx)
+  --gpx-year YEAR       GPX files year filter (default: all)
   --gpx-bound BOUND BOUND BOUND BOUND
-                        heatmap bounding box as lat_north_bound,
-                        lon_west_bound, lat_south_bound, lon_east_bound
-                        (default: 90 -180 -90 180)
-  --output FILENAME     heatmap file name (default: heatmap.png)
-  --max-tiles MAXTILES  heatmap maximum dimension in tiles, 1 tile = 256
-                        pixels (default: 3)
-  --sigma-pixels SIGMA  heatmap Gaussian kernel half-bandwith in pixels
-                        (default: 1)
-  --csv-output          enable CSV output of the heatmap in addition to the
-                        PNG image (lat,lon,intensity)
+                        heatmap bounding box coordinates as lat_min, lat_max,
+                        lon_min, lon_max (default: -90 +90 -180 +180)
+  --output FILE         heatmap name (default: heatmap.png)
+  --csv                 also save the heatmap data to a CSV file
+  --scale SCALE         heatmap size in multiples of 256 (default: 3)
+  --bandwith SIGMA      heatmap Gaussian kernel bandwith in pixels (default:
+                        1)
   --no-cdist            disable cumulative distribution of trackpoints
-                        (converts to uniform distribution)
+                        (uniform distribution)
 ```
 
-For an explanation on the cumulative distribution function, see:  
-https://medium.com/strava-engineering/the-global-heatmap-now-6x-hotter-23fc01d301de
+Example:
+`strava_local_heatmap.py --gpx-filter *Ride*.gpx --gpx-year 2018 --gpx-bound 24.39 49.38 -124.84-66.88`
 
-Example:  
-`strava_local_heatmap.py --gpx-year 2018 --gpx-filter *Ride*.gpx --gpx-bound 51.26 -5.45 41.26 9.86`
+For an explanation on the cumulative distribution function, see:
+https://medium.com/strava-engineering/the-global-heatmap-now-6x-hotter-23fc01d301de
 
 ## Output
 
-**heatmap.png**  
+**heatmap.png**
 ![heatmap_zoom.png](output_heatmap.png)
 
-**heatmap.csv**  
+**heatmap.csv**
 See https://umap.openstreetmap.fr/en/map/demo-heatmap_261644 (contribution by [@badele](https://github.com/badele))
 
 ## Installation
 
-To setup in a local Python virtual environment, run `setup.sh`  
+To setup in a local Python virtual environment, run `setup.sh`
 
 To activate the virtual environment, run `source virtualenv/bin/activate`
 

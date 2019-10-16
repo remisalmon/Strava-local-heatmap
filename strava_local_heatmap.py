@@ -41,6 +41,7 @@ def deg2num(lat_deg, lon_deg, zoom): # return OSM tile x,y from lat,lon in degre
   n = 2.0 ** zoom
   xtile = int((lon_deg + 180.0) / 360.0 * n)
   ytile = int((1.0 - np.log(np.tan(lat_rad) + (1 / np.cos(lat_rad))) / np.pi) / 2.0 * n)
+
   return(xtile, ytile)
 
 def num2deg(xtile, ytile, zoom): # return lat,lon in degrees from OSM tile x,y (from https://wiki.openstreetmap.org/wiki/Slippy_map_tilenames)
@@ -48,6 +49,7 @@ def num2deg(xtile, ytile, zoom): # return lat,lon in degrees from OSM tile x,y (
   lon_deg = xtile / n * 360.0 - 180.0
   lat_rad = np.arctan(np.sinh(np.pi * (1 - 2 * ytile / n)))
   lat_deg = np.degrees(lat_rad)
+
   return (lat_deg, lon_deg)
 
 def deg2xy(lat_deg, lon_deg, zoom): # return OSM global x,y coordinates from lat,lon in degrees
@@ -55,10 +57,11 @@ def deg2xy(lat_deg, lon_deg, zoom): # return OSM global x,y coordinates from lat
     n = 2.0 ** zoom
     x = (lon_deg + 180.0) / 360.0 * n
     y = (1.0 - np.log(np.tan(lat_rad) + (1 / np.cos(lat_rad))) / np.pi) / 2.0 * n
+
     return(x, y)
 
 def box_filter(image, w_box): # return image filtered with box filter
-    image_padded = np.pad(image, max(int((w_box-1)/2), 1), mode = 'edge')
+    image_padded = np.pad(image, max(int((w_box-1)/2.0), 1), mode = 'edge')
 
     for i in range(image.shape[0]):
         for j in range(image.shape[1]):
@@ -73,7 +76,6 @@ def download_tile(tile_url, tile_file): # download image from url to file
         response = urllib.request.urlopen(request)
     except urllib.error.URLError as e: # (from https://docs.python.org/3/howto/urllib2.html)
         print('ERROR cannot download tile from OSM server')
-
         if hasattr(e, 'reason'):
             print(e.reason)
 
@@ -94,11 +96,11 @@ def download_tile(tile_url, tile_file): # download image from url to file
 def main(args):
     # parameters
     gpx_dir = args.dir # string
-    gpx_filter = args.filter # string
+    gpx_glob = args.glob # string
     gpx_year = args.year # string
-    lat_north_bound, lon_west_bound, lat_south_bound, lon_east_bound = args.bound # int
-    picture_output = args.filename # string
-    max_nb_tiles = args.maxtiles # int
+    lat_bound_min, lat_bound_max, lon_bound_min, lon_bound_max = args.bound # int
+    heatmap_file = args.file # string
+    heatmap_scale = args.scale # int
     sigma_pixels = args.sigma # int
     use_csv = args.csv # bool
     use_cumululative_distribution = not args.nocdist # bool
@@ -112,10 +114,10 @@ def main(args):
         quit()
 
     # find GPX files
-    gpx_files = glob.glob(gpx_dir+'/'+gpx_filter)
+    gpx_files = glob.glob(gpx_dir+'/'+gpx_glob)
 
     if not gpx_files:
-        print('ERROR no GPX files in '+gpx_dir)
+        print('ERROR no data matching '+gpx_dir+'/'+gpx_glob)
         quit()
 
     # read GPX files
@@ -139,7 +141,7 @@ def main(args):
                         break
 
     if not lat_lon_data:
-        print('ERROR no matching data found')
+        print('ERROR no data matching '+gpx_dir+'/'+gpx_glob+' with --gpx-year '+gpx_year)
         quit()
 
     print('processing GPX data...')
@@ -147,8 +149,12 @@ def main(args):
     lat_lon_data = np.array(lat_lon_data) # convert list to NumPy array
 
     # crop data to bounding box
-    lat_lon_data = lat_lon_data[np.logical_and(lat_lon_data[:, 0] > lat_south_bound, lat_lon_data[:, 0] < lat_north_bound), :]
-    lat_lon_data = lat_lon_data[np.logical_and(lat_lon_data[:, 1] > lon_west_bound, lat_lon_data[:, 1] < lon_east_bound), :]
+    lat_lon_data = lat_lon_data[np.logical_and(lat_lon_data[:, 0] > lat_bound_min, lat_lon_data[:, 0] < lat_bound_max), :]
+    lat_lon_data = lat_lon_data[np.logical_and(lat_lon_data[:, 1] > lon_bound_min, lat_lon_data[:, 1] < lon_bound_max), :]
+
+    if lat_lon_data.size == 0:
+        print('ERROR no matching '+gpx_dir+'/'+gpx_glob+' with --gpx-bound '+' '.join(str(s) for s in [lat_bound_min, lat_bound_max, lon_bound_min, lon_bound_max]))
+        quit()
 
     # find good zoom level to match max_nb_tiles
     lat_min = lat_lon_data[:, 0].min()
@@ -160,7 +166,7 @@ def main(args):
         x_tile_min, y_tile_max = deg2num(lat_min, lon_min, zoom)
         x_tile_max, y_tile_min = deg2num(lat_max, lon_max, zoom)
 
-        if (x_tile_max-x_tile_min+1) > max_nb_tiles or (y_tile_max-y_tile_min+1) > max_nb_tiles: # decrease zoom level if number of tiles used is too high
+        if max(x_tile_max-x_tile_min+1, y_tile_max-y_tile_min+1) > heatmap_scale: # decrease zoom level if number of tiles used is too high
             zoom -= 1
         else:
             break
@@ -169,7 +175,7 @@ def main(args):
 
     # download tiles
     if not os.path.exists('tiles'):
-        os.mkdir('tiles')
+        os.makedirs('tiles')
 
     i = 0
     for x in range(x_tile_min, x_tile_max+1):
@@ -258,20 +264,20 @@ def main(args):
         supertile_overlay[:, :, c] = (1.0-data_color[:, :, c])*supertile[:, :, c]+data_color[:, :, c] # fill color overlay
 
     # save image
-    if not os.path.splitext(picture_output)[1] == '.png': # make sure we use PNG
-        picture_output = os.path.splitext(picture_output)[0]+'.png'
+    if not os.path.splitext(heatmap_file)[1] == '.png': # make sure we use PNG
+        heatmap_file = os.path.splitext(heatmap_file)[0]+'.png'
 
-    print('saving '+picture_output+'...')
+    print('saving '+heatmap_file+'...')
 
-    plt.imsave(picture_output, supertile_overlay)
+    plt.imsave(heatmap_file, supertile_overlay)
 
     # save csv file
     if use_csv:
-        csv_output = os.path.splitext(picture_output)[0]+'.csv'
+        csv_file = os.path.splitext(heatmap_file)[0]+'.csv'
 
-        print('saving '+csv_output+'...')
+        print('saving '+csv_file+'...')
 
-        with open(csv_output, 'w') as file:
+        with open(csv_file, 'w') as file:
             file.write('lat,lon,intensity\n')
 
             for i in range(data.shape[0]):
@@ -289,15 +295,16 @@ def main(args):
 if __name__ == '__main__':
     # command line parameters
     parser = argparse.ArgumentParser(description = 'Generate a local heatmap from Strava GPX files', epilog = 'Report issues to https://github.com/remisalmon/strava-local-heatmap')
-    parser.add_argument('--gpx-dir', dest = 'dir', default = 'gpx', help = 'directory containing the GPX files (default: gpx)')
-    parser.add_argument('--gpx-filter', dest = 'filter', default = '*.gpx', help = 'glob filter for the GPX files (default: *.gpx)')
-    parser.add_argument('--gpx-year', dest = 'year', default = 'all', help = 'year for which to read the GPX files (default: all)')
-    parser.add_argument('--gpx-bound', dest = 'bound', type = float, nargs = 4, default = [+90, -180, -90, +180], help = 'heatmap bounding box as lat_north_bound, lon_west_bound, lat_south_bound, lon_east_bound (default: 90 -180 -90 180)')
-    parser.add_argument('--output', dest = 'filename', default = 'heatmap.png', help = 'heatmap file name (default: heatmap.png)')
-    parser.add_argument('--max-tiles', dest = 'maxtiles', type = int, default = 3, help = 'heatmap maximum dimension  in tiles, 1 tile = 256 pixels (default: 3)')
-    parser.add_argument('--sigma-pixels', dest = 'sigma', type = int, default = 1, help = 'heatmap Gaussian kernel half-bandwith in pixels (default: 1)')
-    parser.add_argument('--csv-output', dest = 'csv', action = 'store_true', help = 'enable CSV output of the heatmap in addition to the PNG image (lat,lon,intensity)')
-    parser.add_argument('--no-cdist', dest = 'nocdist', action = 'store_true', help = 'disable cumulative distribution of trackpoints (converts to uniform distribution)')
+
+    parser.add_argument('--gpx-dir', dest = 'dir', default = 'gpx', help = 'GPX files directory  (default: gpx)')
+    parser.add_argument('--gpx-filter', dest = 'glob', default = '*.gpx', help = 'GPX files glob filter (default: *.gpx)')
+    parser.add_argument('--gpx-year', dest = 'year', default = 'all', help = 'GPX files year filter (default: all)')
+    parser.add_argument('--gpx-bound', dest = 'bound', type = float, nargs = 4, default = [-90, +90, -180, +180], help = 'heatmap bounding box coordinates as lat_min, lat_max, lon_min, lon_max (default: -90 +90 -180 +180)')
+    parser.add_argument('--output', dest = 'file', default = 'heatmap.png', help = 'heatmap name (default: heatmap.png)')
+    parser.add_argument('--csv', dest = 'csv', action = 'store_true', help = 'also save the heatmap data to a CSV file')
+    parser.add_argument('--scale', dest = 'scale', type = int, default = 3, help = 'heatmap size in multiples of 256 (default: 3)')
+    parser.add_argument('--bandwith', dest = 'sigma', type = int, default = 1, help = 'heatmap Gaussian kernel bandwith in pixels (default: 1)')
+    parser.add_argument('--no-cdist', dest = 'nocdist', action = 'store_true', help = 'disable cumulative distribution of trackpoints (uniform distribution)')
 
     args = parser.parse_args()
 
