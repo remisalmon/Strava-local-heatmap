@@ -4,7 +4,7 @@ Python script to reproduce the Strava Global Heatmap ([www.strava.com/heatmap](h
 
 For an interactive version, check out [github.com/remisalmon/Strava-local-heatmap-browser](https://github.com/remisalmon/Strava-local-heatmap-browser)
 
-Optimized for cycling :bicyclist: activities
+Optimized for cycling activities :bicyclist:
 
 ## Features
 
@@ -13,7 +13,7 @@ Optimized for cycling :bicyclist: activities
 
 ## Usage
 
-* Download your GPX files from Strava and add them to the `gpx` folder
+* Download your GPX files from Strava and add them to the `gpx` folder  
 (see https://support.strava.com/hc/en-us/articles/216918437-Exporting-your-Data-and-Bulk-Export)
 * Run `python3 strava_local_heatmap.py`
 * The **heatmap.png** image is saved to the current directory
@@ -44,18 +44,18 @@ optional arguments:
                         (uniform distribution)
 ```
 
-Example:
+Example:  
 `strava_local_heatmap.py --gpx-filter *Ride*.gpx --gpx-year 2018 --gpx-bound 24.39 49.38 -124.84-66.88`
 
-For an explanation on the cumulative distribution function, see:
+For an explanation on the cumulative distribution function, see:  
 https://medium.com/strava-engineering/the-global-heatmap-now-6x-hotter-23fc01d301de
 
 ## Output
 
-**heatmap.png**
+**heatmap.png**  
 ![heatmap_zoom.png](output_heatmap.png)
 
-**heatmap.csv**
+**heatmap.csv**  
 See https://umap.openstreetmap.fr/en/map/demo-heatmap_261644 (contribution by [@badele](https://github.com/badele))
 
 ## Installation
