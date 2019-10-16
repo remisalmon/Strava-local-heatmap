@@ -135,6 +135,8 @@ def main(args):
                                 tmp = re.findall('-?\d*\.?\d+', line)
 
                                 lat_lon_data.append([float(tmp[0]), float(tmp[1])])
+                    else:
+                        break
 
     if not lat_lon_data:
         print('ERROR no matching data found')
