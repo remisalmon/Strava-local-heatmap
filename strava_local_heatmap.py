@@ -134,10 +134,7 @@ def main(args):
                             if '<trkpt' in line: # trackpoints latitude, longitude
                                 tmp = re.findall('-?\d*\.?\d+', line)
 
-                                lat = float(tmp[0])
-                                lon = float(tmp[1])
-
-                                lat_lon_data.append([lat, lon])
+                                lat_lon_data.append([float(tmp[0]), float(tmp[1])])
 
     if not lat_lon_data:
         print('ERROR no matching data found')
@@ -152,23 +149,14 @@ def main(args):
     lat_lon_data = lat_lon_data[np.logical_and(lat_lon_data[:, 1] > lon_west_bound, lat_lon_data[:, 1] < lon_east_bound), :]
 
     # find good zoom level to match max_nb_tiles
-    xy_tiles_minmax = np.zeros((4, 2), dtype = int) # x,y tile coordinates of bounding box
-
     lat_min = lat_lon_data[:, 0].min()
     lat_max = lat_lon_data[:, 0].max()
     lon_min = lat_lon_data[:, 1].min()
     lon_max = lat_lon_data[:, 1].max()
 
     while True:
-        xy_tiles_minmax[0, :] = deg2num(lat_min, lon_min, zoom)
-        xy_tiles_minmax[1, :] = deg2num(lat_min, lon_max, zoom)
-        xy_tiles_minmax[2, :] = deg2num(lat_max, lon_min, zoom)
-        xy_tiles_minmax[3, :] = deg2num(lat_max, lon_max, zoom)
-
-        x_tile_min = xy_tiles_minmax[:, 0].min()
-        x_tile_max = xy_tiles_minmax[:, 0].max()
-        y_tile_min = xy_tiles_minmax[:, 1].min()
-        y_tile_max = xy_tiles_minmax[:, 1].max()
+        x_tile_min, y_tile_max = deg2num(lat_min, lon_min, zoom)
+        x_tile_max, y_tile_min = deg2num(lat_max, lon_max, zoom)
 
         if (x_tile_max-x_tile_min+1) > max_nb_tiles or (y_tile_max-y_tile_min+1) > max_nb_tiles: # decrease zoom level if number of tiles used is too high
             zoom -= 1
@@ -246,7 +234,7 @@ def main(args):
 
     data[data > m] = m # threshold data to maximum accumulation of trackpoints
 
-    # kernel density estimation = convolution with almost-Gaussian kernel
+    # kernel density estimation = convolution with (almost-)Gaussian kernel
     w_filter = int(np.sqrt(12.0*sigma_pixels**2+1.0)) # (from https://www.peterkovesi.com/papers/FastGaussianSmoothing.pdf)
 
     data = box_filter(data, w_filter)
