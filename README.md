@@ -2,7 +2,7 @@
 
 Python script to reproduce the Strava Global Heatmap ([www.strava.com/heatmap](https://www.strava.com/heatmap)) with local GPX data
 
-For an interactive version, check out [github.com/remisalmon/Strava-local-heatmap-browser](https://github.com/remisalmon/Strava-local-heatmap-browser)
+For an interactive version check out [github.com/remisalmon/Strava-local-heatmap-browser](https://github.com/remisalmon/Strava-local-heatmap-browser)
 
 Optimized for cycling activities :bicyclist:
 
@@ -33,19 +33,17 @@ optional arguments:
   --gpx-filter GLOB     GPX files glob filter (default: *.gpx)
   --gpx-year YEAR       GPX files year filter (default: all)
   --gpx-bound BOUND BOUND BOUND BOUND
-                        heatmap bounding box coordinates as lat_min, lat_max,
-                        lon_min, lon_max (default: -90 +90 -180 +180)
+                        heatmap bounding box coordinates as lat_min, lat_max, lon_min, lon_max (default: -90 +90 -180 +180)
   --output FILE         heatmap name (default: heatmap.png)
   --csv                 also save the heatmap data to a CSV file
   --scale SCALE         heatmap size in multiples of 256 (default: 3)
-  --bandwith SIGMA      heatmap Gaussian kernel bandwith in pixels (default:
-                        1)
+  --bandwith SIGMA      heatmap Gaussian kernel bandwith in pixels (default: 1)
   --no-cdist            disable cumulative distribution of trackpoints
                         (uniform distribution)
 ```
 
 Example:  
-`strava_local_heatmap.py --gpx-filter *Ride*.gpx --gpx-year 2018 --gpx-bound 24.39 49.38 -124.84-66.88`
+`strava_local_heatmap.py --gpx-filter *Ride*.gpx --gpx-year 2018 --gpx-bound 24.39 49.38 -124.84 -66.88`
 
 For an explanation on the cumulative distribution function, see:  
 https://medium.com/strava-engineering/the-global-heatmap-now-6x-hotter-23fc01d301de
@@ -60,9 +58,7 @@ See https://umap.openstreetmap.fr/en/map/demo-heatmap_261644 (contribution by [@
 
 ## Installation
 
-To setup in a local Python virtual environment, run `setup.sh`
-
-To activate the virtual environment, run `source virtualenv/bin/activate`
+Run `bash setup.sh && source virtualenv/bin/activate`
 
 ### Python dependencies
 
