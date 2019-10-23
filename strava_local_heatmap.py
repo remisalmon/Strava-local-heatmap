@@ -23,8 +23,9 @@ import os
 import re
 import glob
 import time
-import urllib
 import argparse
+import urllib.error
+import urllib.request
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -76,6 +77,7 @@ def download_tile(tile_url, tile_file): # download image from url to file
         response = urllib.request.urlopen(request)
     except urllib.error.URLError as e: # (from https://docs.python.org/3/howto/urllib2.html)
         print('ERROR cannot download tile from OSM server')
+
         if hasattr(e, 'reason'):
             print(e.reason)
 
@@ -168,6 +170,7 @@ def main(args):
 
         if max(x_tile_max-x_tile_min+1, y_tile_max-y_tile_min+1) > heatmap_scale: # decrease zoom level if number of tiles used is too high
             zoom -= 1
+
         else:
             break
 
@@ -230,7 +233,7 @@ def main(args):
         i = int(np.round((y-y_tile_min)*OSM_TILE_SIZE))
         j = int(np.round((x-x_tile_min)*OSM_TILE_SIZE))
 
-        data[i-w_pixels:i+w_pixels+1, j-w_pixels:j+w_pixels+1] = data[i-w_pixels:i+w_pixels+1, j-w_pixels:j+w_pixels+1] + 1 # ensure pixels are centered on the trackpoint
+        data[i-w_pixels:i+w_pixels+1, j-w_pixels:j+w_pixels+1] += 1 # ensure pixels are centered on the trackpoint
 
     # threshold trackpoints accumulation to avoid large local maxima
     if use_cumululative_distribution:
