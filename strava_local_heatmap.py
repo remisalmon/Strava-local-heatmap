@@ -51,7 +51,7 @@ def num2deg(xtile, ytile, zoom): # return lat,lon in degrees from OSM tile x,y (
   lat_rad = np.arctan(np.sinh(np.pi * (1 - 2 * ytile / n)))
   lat_deg = np.degrees(lat_rad)
 
-  return (lat_deg, lon_deg)
+  return(lat_deg, lon_deg)
 
 def deg2xy(lat_deg, lon_deg, zoom): # return OSM global x,y coordinates from lat,lon in degrees
     lat_rad = np.radians(lat_deg)
@@ -62,11 +62,12 @@ def deg2xy(lat_deg, lon_deg, zoom): # return OSM global x,y coordinates from lat
     return(x, y)
 
 def box_filter(image, w_box): # return image filtered with box filter
-    image_padded = np.pad(image, max(int((w_box-1)/2.0), 1), mode = 'edge')
+    box = np.ones((w_box, w_box))/(w_box**2)
 
-    for i in range(image.shape[0]):
-        for j in range(image.shape[1]):
-            image[i ,j] = np.sum(image_padded[i:i+w_box, j:j+w_box])/(w_box**2)
+    image_fft = np.fft.rfft2(image)
+    box_fft = np.fft.rfft2(box, s = image.shape)
+
+    image = np.fft.irfft2(image_fft*box_fft)
 
     return(image)
 
