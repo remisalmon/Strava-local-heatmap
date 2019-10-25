@@ -76,6 +76,7 @@ def download_tile(tile_url, tile_file): # download image from url to file
 
     try:
         response = urllib.request.urlopen(request)
+
     except urllib.error.URLError as e: # (from https://docs.python.org/3/howto/urllib2.html)
         print('ERROR cannot download tile from OSM server')
 
@@ -132,12 +133,12 @@ def main(args):
         with open(gpx_files[i]) as file:
             for line in file:
                 if '<time' in line: # activity date
-                    tmp = re.findall('\d{4}', line)
+                    tmp = re.findall('[0-9]{4}', line)
 
                     if gpx_year in (tmp[0], 'all'):
                         for line in file:
                             if '<trkpt' in line: # trackpoints latitude, longitude
-                                tmp = re.findall('-?\d*\.?\d+', line)
+                                tmp = re.findall('-?[0-9]*[.]?[0-9]+', line)
 
                                 lat_lon_data.append([float(tmp[0]), float(tmp[1])])
                     else:
