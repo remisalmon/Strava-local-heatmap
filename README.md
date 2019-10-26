@@ -21,25 +21,26 @@ Optimized for cycling activities :bicyclist:
 ### Command-line options
 
 ```
-usage: strava_local_heatmap.py [-h] [--gpx-dir DIR] [--gpx-filter GLOB]
-                               [--gpx-year YEAR]
+usage: strava_local_heatmap.py [-h] [--gpx-dir DIR] [--gpx-year YEAR]
+                               [--gpx-filter GLOB]
                                [--gpx-bound BOUND BOUND BOUND BOUND]
-                               [--output FILE] [--csv] [--scale SCALE]
-                               [--bandwith SIGMA] [--no-cdist]
+                               [--output FILE] [--zoom ZOOM] [--sigma SIGMA]
+                               [--no-cdist] [--csv]
 
 optional arguments:
   -h, --help            show this help message and exit
   --gpx-dir DIR         GPX files directory (default: gpx)
-  --gpx-filter GLOB     GPX files glob filter (default: *.gpx)
   --gpx-year YEAR       GPX files year filter (default: all)
+  --gpx-filter GLOB     GPX files glob filter (default: *.gpx)
   --gpx-bound BOUND BOUND BOUND BOUND
-                        heatmap bounding box coordinates as lat_min, lat_max, lon_min, lon_max (default: -90 +90 -180 +180)
+                        heatmap bounding box coordinates as lat_min, lat_max,
+                        lon_min, lon_max (default: -90 +90 -180 +180)
   --output FILE         heatmap name (default: heatmap.png)
-  --csv                 also save the heatmap data to a CSV file
-  --scale SCALE         heatmap size in multiples of 256 (default: 3)
-  --bandwith SIGMA      heatmap Gaussian kernel bandwith in pixels (default: 1)
+  --zoom ZOOM           heatmap size in multiples of 256 (default: 3)
+  --sigma SIGMA         heatmap Gaussian kernel sigma in pixels (default: 1)
   --no-cdist            disable cumulative distribution of trackpoints
                         (uniform distribution)
+  --csv                 also save the heatmap data to a CSV file
 ```
 
 Example:  
@@ -56,7 +57,7 @@ https://medium.com/strava-engineering/the-global-heatmap-now-6x-hotter-23fc01d30
 **heatmap.csv**  
 See https://umap.openstreetmap.fr/en/map/demo-heatmap_261644 (contribution by [@badele](https://github.com/badele))
 
-## Installation
+## Setup
 
 Run `bash setup.sh && source virtualenv/bin/activate`
 
@@ -73,4 +74,4 @@ Arch Linux (see [here](https://github.com/remisalmon/strava-local-heatmap/pull/3
 
 ## Projects using strava_local_heatmap.py
 
-- [JeSuisUnDesDeux](https://gitlab.com/JeSuisUnDesDeux/jesuisundesdeux/tree/master/datas/traces)
+[JeSuisUnDesDeux](https://gitlab.com/JeSuisUnDesDeux/jesuisundesdeux/tree/master/datas/traces)

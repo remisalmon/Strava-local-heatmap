@@ -30,11 +30,13 @@ import urllib.request
 import numpy as np
 import matplotlib.pyplot as plt
 
-# constants
+# parameters
 PLT_COLORMAP = 'hot' # matplotlib color map (from https://matplotlib.org/examples/color/colormaps_reference.html)
+MAX_TILE_COUNT = 100 # maximum number of OSM tiles to download
 
-OSM_TILE_SIZE = 256 # OSM tile size in pixels (do not change)
-OSM_MAX_ZOOM = 19 # OSM max zoom level (do not change)
+# constants
+OSM_TILE_SIZE = 256 # OSM tile size in pixels
+OSM_MAX_ZOOM = 19 # OSM max zoom level
 
 # functions
 def deg2num(lat_deg, lon_deg, zoom): # return OSM tile x,y from lat,lon in degrees (from https://wiki.openstreetmap.org/wiki/Slippy_map_tilenames)
@@ -87,6 +89,7 @@ def download_tile(tile_url, tile_file): # download image from url to file
             print(e.code)
 
         status = False
+
     else:
         with open(tile_file, 'wb') as file:
             file.write(response.read())
@@ -104,15 +107,17 @@ def main(args):
     gpx_year = args.year # string
     lat_bound_min, lat_bound_max, lon_bound_min, lon_bound_max = args.bound # int
     heatmap_file = args.file # string
-    heatmap_scale = args.scale # int
+    heatmap_zoom = args.zoom # int
     sigma_pixels = args.sigma # int
     use_csv = args.csv # bool
     use_cumululative_distribution = not args.nocdist # bool
 
-    zoom = OSM_MAX_ZOOM
+    if heatmap_zoom > OSM_MAX_ZOOM:
+        heatmap_zoom = OSM_MAX_ZOOM
 
     try:
         cmap = plt.get_cmap(PLT_COLORMAP)
+
     except:
         print('ERROR colormap '+PLT_COLORMAP+' does not exists')
         quit()
@@ -135,12 +140,13 @@ def main(args):
                 if '<time' in line: # activity date
                     tmp = re.findall('[0-9]{4}', line)
 
-                    if gpx_year in (tmp[0], 'all'):
+                    if gpx_year in [tmp[0], 'all']:
                         for line in file:
-                            if '<trkpt' in line: # trackpoints latitude, longitude
+                            if '<trkpt' in line: # trackpoint latitude, longitude
                                 tmp = re.findall('-?[0-9]*[.]?[0-9]+', line)
 
                                 lat_lon_data.append([float(tmp[0]), float(tmp[1])])
+
                     else:
                         break
 
@@ -160,23 +166,20 @@ def main(args):
         print('ERROR no matching '+gpx_dir+'/'+gpx_glob+' with --gpx-bound '+' '.join(str(s) for s in [lat_bound_min, lat_bound_max, lon_bound_min, lon_bound_max]))
         quit()
 
-    # find good zoom level to match max_nb_tiles
+    # find min, max tile x,y coordinates
     lat_min = lat_lon_data[:, 0].min()
     lat_max = lat_lon_data[:, 0].max()
     lon_min = lat_lon_data[:, 1].min()
     lon_max = lat_lon_data[:, 1].max()
 
-    while True:
-        x_tile_min, y_tile_max = deg2num(lat_min, lon_min, zoom)
-        x_tile_max, y_tile_min = deg2num(lat_max, lon_max, zoom)
-
-        if max(x_tile_max-x_tile_min+1, y_tile_max-y_tile_min+1) > heatmap_scale: # decrease zoom level if number of tiles used is too high
-            zoom -= 1
-
-        else:
-            break
+    x_tile_min, y_tile_max = deg2num(lat_min, lon_min, heatmap_zoom)
+    x_tile_max, y_tile_min = deg2num(lat_max, lon_max, heatmap_zoom)
 
     tile_count = (x_tile_max-x_tile_min+1)*(y_tile_max-y_tile_min+1) # total number of tiles
+
+    if tile_count > MAX_TILE_COUNT:
+        print('ERROR zoom value too high')
+        quit()
 
     # download tiles
     if not os.path.exists('tiles'):
@@ -185,9 +188,9 @@ def main(args):
     i = 0
     for x in range(x_tile_min, x_tile_max+1):
         for y in range(y_tile_min, y_tile_max+1):
-            tile_url = 'https://maps.wikimedia.org/osm-intl/'+str(zoom)+'/'+str(x)+'/'+str(y)+'.png' # (from https://wiki.openstreetmap.org/wiki/Tile_servers)
+            tile_url = 'https://maps.wikimedia.org/osm-intl/'+str(heatmap_zoom)+'/'+str(x)+'/'+str(y)+'.png' # (from https://wiki.openstreetmap.org/wiki/Tile_servers)
 
-            tile_file = 'tiles/tile_'+str(zoom)+'_'+str(x)+'_'+str(y)+'.png'
+            tile_file = 'tiles/tile_'+str(heatmap_zoom)+'_'+str(x)+'_'+str(y)+'.png'
 
             if not glob.glob(tile_file): # check if tile already downloaded
                 i += 1
@@ -208,7 +211,7 @@ def main(args):
 
     for x in range(x_tile_min, x_tile_max+1):
         for y in range(y_tile_min, y_tile_max+1):
-            tile_filename = 'tiles/tile_'+str(zoom)+'_'+str(x)+'_'+str(y)+'.png'
+            tile_filename = 'tiles/tile_'+str(heatmap_zoom)+'_'+str(x)+'_'+str(y)+'.png'
 
             tile = plt.imread(tile_filename) # float ([0,1])
 
@@ -230,22 +233,23 @@ def main(args):
     w_pixels = int(sigma_pixels) # add w_pixels (= Gaussian kernel sigma) pixels of padding around the trackpoints for better visualization
 
     for k in range(len(lat_lon_data)):
-        x, y = deg2xy(lat_lon_data[k, 0], lat_lon_data[k, 1], zoom)
+        x, y = deg2xy(lat_lon_data[k, 0], lat_lon_data[k, 1], heatmap_zoom)
 
         i = int(np.round((y-y_tile_min)*OSM_TILE_SIZE))
         j = int(np.round((x-x_tile_min)*OSM_TILE_SIZE))
 
-        data[i-w_pixels:i+w_pixels+1, j-w_pixels:j+w_pixels+1] += 1 # ensure pixels are centered on the trackpoint
+        data[i-w_pixels:i+w_pixels+1, j-w_pixels:j+w_pixels+1] += 1 # pixels are centered on the trackpoint
 
     # threshold trackpoints accumulation to avoid large local maxima
     if use_cumululative_distribution:
-        pixel_res = 156543.03*np.cos(np.radians(np.mean(lat_lon_data[:, 0])))/(2**zoom) # pixel resolution (from https://wiki.openstreetmap.org/wiki/Slippy_map_tilenames)
+        pixel_res = 156543.03*np.cos(np.radians(np.mean(lat_lon_data[:, 0])))/(2**heatmap_zoom) # pixel resolution (from https://wiki.openstreetmap.org/wiki/Slippy_map_tilenames)
 
-        m = (1.0/5.0)*pixel_res*len(gpx_files) # trackpoints max accumulation per pixel = (1/5) trackpoints/meters * (pixel_res) meters/pixels per (1) activity (Strava records trackpoints every 5 meters in average for cycling activites)
+        m = (1.0/5.0)*pixel_res*len(gpx_files) # trackpoints max accumulation per pixel = 1/5 (trackpoints/meters) * pixel_res (meters/pixel) per activity (Strava records trackpoints every 5 meters in average for cycling activites)
+
     else:
         m = 1.0
 
-    data[data > m] = m # threshold data to maximum accumulation of trackpoints
+    data[data > m] = m # threshold data to max accumulation of trackpoints
 
     # kernel density estimation = convolution with (almost-)Gaussian kernel
     w_filter = int(np.sqrt(12.0*sigma_pixels**2+1.0)) # (from https://www.peterkovesi.com/papers/FastGaussianSmoothing.pdf)
@@ -291,7 +295,7 @@ def main(args):
                         x = x_tile_min+j/OSM_TILE_SIZE
                         y = y_tile_min+i/OSM_TILE_SIZE
 
-                        lat, lon = num2deg(x, y, zoom)
+                        lat, lon = num2deg(x, y, heatmap_zoom)
 
                         file.write(str(lat)+','+str(lon)+','+str(data[i, j])+'\n')
 
@@ -302,14 +306,14 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description = 'Generate a local heatmap from Strava GPX files', epilog = 'Report issues to https://github.com/remisalmon/strava-local-heatmap')
 
     parser.add_argument('--gpx-dir', dest = 'dir', default = 'gpx', help = 'GPX files directory  (default: gpx)')
-    parser.add_argument('--gpx-filter', dest = 'glob', default = '*.gpx', help = 'GPX files glob filter (default: *.gpx)')
     parser.add_argument('--gpx-year', dest = 'year', default = 'all', help = 'GPX files year filter (default: all)')
+    parser.add_argument('--gpx-filter', dest = 'glob', default = '*.gpx', help = 'GPX files glob filter (default: *.gpx)')
     parser.add_argument('--gpx-bound', dest = 'bound', type = float, nargs = 4, default = [-90, +90, -180, +180], help = 'heatmap bounding box coordinates as lat_min, lat_max, lon_min, lon_max (default: -90 +90 -180 +180)')
     parser.add_argument('--output', dest = 'file', default = 'heatmap.png', help = 'heatmap name (default: heatmap.png)')
-    parser.add_argument('--csv', dest = 'csv', action = 'store_true', help = 'also save the heatmap data to a CSV file')
-    parser.add_argument('--scale', dest = 'scale', type = int, default = 3, help = 'heatmap size in multiples of 256 (default: 3)')
-    parser.add_argument('--bandwith', dest = 'sigma', type = int, default = 1, help = 'heatmap Gaussian kernel bandwith in pixels (default: 1)')
+    parser.add_argument('--zoom', dest = 'zoom', type = int, default = 10, help = 'heatmap size in multiples of 256 (default: 3)')
+    parser.add_argument('--sigma', dest = 'sigma', type = int, default = 1, help = 'heatmap Gaussian kernel sigma in pixels (default: 1)')
     parser.add_argument('--no-cdist', dest = 'nocdist', action = 'store_true', help = 'disable cumulative distribution of trackpoints (uniform distribution)')
+    parser.add_argument('--csv', dest = 'csv', action = 'store_true', help = 'also save the heatmap data to a CSV file')
 
     args = parser.parse_args()
 
