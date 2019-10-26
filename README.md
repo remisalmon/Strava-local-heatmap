@@ -2,9 +2,9 @@
 
 Python script to reproduce the Strava Global Heatmap ([www.strava.com/heatmap](https://www.strava.com/heatmap)) with local GPX data
 
-For an interactive version check out [github.com/remisalmon/Strava-local-heatmap-browser](https://github.com/remisalmon/Strava-local-heatmap-browser)
-
 Optimized for cycling activities :bicyclist:
+
+**Check out [github.com/remisalmon/Strava-local-heatmap-browser](https://github.com/remisalmon/Strava-local-heatmap-browser) for an interactive version**
 
 ## Features
 
@@ -16,7 +16,7 @@ Optimized for cycling activities :bicyclist:
 * Download your GPX files from Strava and add them to the `gpx` folder  
 (see https://support.strava.com/hc/en-us/articles/216918437-Exporting-your-Data-and-Bulk-Export)
 * Run `python3 strava_local_heatmap.py`
-* The **heatmap.png** image is saved to the current directory
+* The heatmap is saved to `heatmap.png`
 
 ### Command-line options
 
@@ -36,15 +36,17 @@ optional arguments:
                         heatmap bounding box coordinates as lat_min, lat_max,
                         lon_min, lon_max (default: -90 +90 -180 +180)
   --output FILE         heatmap name (default: heatmap.png)
-  --zoom ZOOM           heatmap size in multiples of 256 (default: 3)
+  --zoom ZOOM           heatmap zoom level 0-19 (default: 10)
   --sigma SIGMA         heatmap Gaussian kernel sigma in pixels (default: 1)
   --no-cdist            disable cumulative distribution of trackpoints
                         (uniform distribution)
   --csv                 also save the heatmap data to a CSV file
 ```
 
+ :warning: `--zoom` is OpenStreetMap's zoom level, first number after `map=` in [www.openstreetmap.org/#map=](https://www.openstreetmap.org)
+
 Example:  
-`strava_local_heatmap.py --gpx-filter *Ride*.gpx --gpx-year 2018 --gpx-bound 24.39 49.38 -124.84 -66.88`
+`strava_local_heatmap.py --gpx-dir ~/GPX --gpx-year 2018 --gpx-filter *Ride*.gpx --zoom 13`
 
 For an explanation on the cumulative distribution function, see:  
 https://medium.com/strava-engineering/the-global-heatmap-now-6x-hotter-23fc01d301de
