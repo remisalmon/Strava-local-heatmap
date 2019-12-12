@@ -2,3 +2,4 @@ gpx/*.gpx
 tiles/*.png
 virtualenv
 /.idea/
+/venv/
