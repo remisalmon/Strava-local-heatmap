@@ -99,8 +99,6 @@ def download_tile(tile_url, tile_file): # download tile from url and save to fil
     return True
 
 def main(args):
-    print(args)
-
     gpx_dir = args.dir # string
     gpx_glob = args.filter # string
     gpx_year = args.year # string
@@ -264,18 +262,16 @@ def main(args):
         supertile_overlay[:, :, c] = (1.0-data_color[:, :, c])*supertile[:, :, c]+data_color[:, :, c]
 
     # save image
-    print('Saving {}...'.format(heatmap_file))
-
     if not os.path.splitext(heatmap_file)[1] == '.png':
         heatmap_file = '{}.png'.format(os.path.splitext(heatmap_file)[0])
 
     plt.imsave(heatmap_file, supertile_overlay)
 
+    print('Saved {}'.format(heatmap_file))
+
     # save csv file
     if use_csv:
         csv_file = '{}.csv'.format(os.path.splitext(heatmap_file)[0])
-
-        print('Saving {}...'.format(csv_file))
 
         with open(csv_file, 'w') as file:
             file.write('latitude,longitude,intensity\n')
@@ -290,7 +286,7 @@ def main(args):
 
                         file.write('{},{},{}\n'.format(lat, lon, data[i,j]))
 
-    print('Done')
+        print('Saved {}'.format(csv_file))
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description = 'Generate a local heatmap from Strava GPX files', epilog = 'Report issues to https://github.com/remisalmon/strava-local-heatmap')
