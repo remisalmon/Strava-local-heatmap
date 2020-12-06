@@ -106,8 +106,10 @@ def main(args):
     heatmap_file = args.output # string
     heatmap_zoom = args.zoom # int
     sigma_pixels = args.sigma # int
+    logscale = not args.log # bool
     use_csv = args.csv # bool
     use_cumululative_distribution = not args.no_cdist # bool
+    
 
     heatmap_zoom = min(heatmap_zoom, OSM_MAX_ZOOM)
 
@@ -240,6 +242,9 @@ def main(args):
 
     data[data > m] = m # threshold data to max accumulation of trackpoints
 
+    if logscale:
+        data[data>0] = np.log(data[data>0])
+
     # kernel density estimation = convolution with (almost-)Gaussian kernel
     w_filter = int(np.sqrt(12.0*sigma_pixels**2+1.0)) # (see https://www.peterkovesi.com/papers/FastGaussianSmoothing.pdf)
 
@@ -298,6 +303,7 @@ if __name__ == '__main__':
     parser.add_argument('--output', default = 'heatmap.png', help = 'heatmap name (default: heatmap.png)')
     parser.add_argument('--zoom', type = int, default = 10, help = 'heatmap zoom level 0-19 (default: 10)')
     parser.add_argument('--sigma', type = int, default = 1, help = 'heatmap Gaussian kernel sigma in pixels (default: 1)')
+    parser.add_argument('--log', action = 'store_true', help = 'heatmap in log scale')
     parser.add_argument('--csv', action = 'store_true', help = 'also save the heatmap data to a CSV file')
     parser.add_argument('--no-cdist', action = 'store_true', help = 'disable cumulative distribution of trackpoints (uniform distribution)')
 

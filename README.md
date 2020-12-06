@@ -35,6 +35,7 @@ optional arguments:
   --output OUTPUT       heatmap name (default: heatmap.png)
   --zoom ZOOM           heatmap zoom level 0-19 (default: 10)
   --sigma SIGMA         heatmap Gaussian kernel sigma in pixels (default: 1)
+  --log                 heatmap in log scale
   --csv                 also save the heatmap data to a CSV file
   --no-cdist            disable cumulative distribution of trackpoints (uniform distribution)
 ```
