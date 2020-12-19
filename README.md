@@ -4,8 +4,6 @@ Python script to reproduce the Strava Global Heatmap ([www.strava.com/heatmap](h
 
 Optimized for cycling activities :bicyclist:
 
-**Check out [github.com/remisalmon/Strava-local-heatmap-browser](https://github.com/remisalmon/Strava-local-heatmap-browser) for an interactive version**
-
 ## Features
 
 * Minimal Python dependencies (`numpy`+`matplotlib`)
@@ -47,13 +45,12 @@ Example: `strava_local_heatmap.py --dir ~/GPX --year 2020 --filter *Ride*.gpx --
 Some info on the histogram equalization algorithm: [https://medium.com/strava-engineering/the-global-heatmap-now-6x-hotter](https://medium.com/strava-engineering/the-global-heatmap-now-6x-hotter-23fc01d301de)
 
 ## Output
-
-**heatmap.png**
-![heatmap.png](images/heatmap.png)|![orange.png](images/orange.png)
+**heatmap.png**|**orange.png**
 --|--
+![heatmap.png](images/heatmap.png)|![orange.png](images/orange.png)
 
-**heatmap.csv**
-See https://umap.openstreetmap.fr/en/map/demo-heatmap_261644 (contribution by [@badele](https://github.com/badele))
+**heatmap.csv**  
+See https://umap.openstreetmap.fr/en/map/demo-heatmap_261644 (from [@badele](https://github.com/badele))
 
 ### Requirements
 
@@ -64,9 +61,8 @@ matplotlib==3.3.3
 
 ### Other requirements
 
-Arch Linux (see [here](https://github.com/remisalmon/strava-local-heatmap/pull/3#issuecomment-443541311)): `sudo pacman -S tk`
+Arch Linux: `sudo pacman -S tk` (see [here](https://github.com/remisalmon/strava-local-heatmap/pull/3#issuecomment-443541311))
 
 ## Projects using strava_local_heatmap.py
 
 [JeSuisUnDesDeux](https://gitlab.com/JeSuisUnDesDeux/jesuisundesdeux/tree/master/datas/traces)
-
