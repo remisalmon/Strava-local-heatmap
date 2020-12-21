@@ -164,9 +164,9 @@ def main(args):
 
     print('Read {} trackpoints'.format(lat_lon_data.shape[0]))
 
-    # find min, max tile x,y coordinates
-    lat_min, lon_min = map(min, (lat_lon_data[:, 0], lat_lon_data[:, 1]))
-    lat_max, lon_max = map(max, (lat_lon_data[:, 0], lat_lon_data[:, 1]))
+    # find tiles coordinates
+    lat_min, lon_min = np.min(lat_lon_data, axis = 0)
+    lat_max, lon_max = np.max(lat_lon_data, axis = 0)
 
     if args.zoom > -1:
         zoom = min(args.zoom, OSM_MAX_ZOOM)
@@ -229,11 +229,10 @@ def main(args):
             supertile[i*OSM_TILE_SIZE:(i+1)*OSM_TILE_SIZE, j*OSM_TILE_SIZE:(j+1)*OSM_TILE_SIZE, :] = tile[:, :, :3]
 
     if not args.orange:
-        supertile = 0.2126*supertile[:, :, 0]+0.7152*supertile[:, :, 1]+0.0722*supertile[:, :, 2] # to grayscale
-
+        supertile = np.sum(supertile*[0.2126, 0.7152, 0.0722], axis = 2) # to grayscale
         supertile = 1.0-supertile # invert colors
 
-        supertile = np.dstack((supertile, supertile, supertile))
+        supertile = np.dstack((supertile, supertile, supertile)) # to rgb
 
     # fill trackpoints
     sigma_pixel = args.sigma if not args.orange else 1
@@ -263,10 +262,7 @@ def main(args):
 
     # equalize histogram and compute kernel density estimation
     if not args.orange:
-        data_hist = np.zeros(int(m+1))
-
-        for d in data.flatten():
-            data_hist[int(d)] += 1.0
+        data_hist, _ = np.histogram(data, bins = int(m+1))
 
         data_hist = np.cumsum(data_hist)/data.size # normalized cumulated histogram
 
@@ -283,7 +279,6 @@ def main(args):
         cmap = plt.get_cmap(PLT_COLORMAP)
 
         data_color = cmap(data)
-
         data_color[data_color == cmap(0.0)] = 0.0 # remove background color
 
         for c in range(3):

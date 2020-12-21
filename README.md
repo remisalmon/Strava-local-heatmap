@@ -1,6 +1,6 @@
 # strava_local_heatmap.py
 
-Python script to reproduce the Strava Global Heatmap ([www.strava.com/heatmap](https://www.strava.com/heatmap)) with local GPX data
+Python script to reproduce the Strava Global Heatmap ([www.strava.com/heatmap](https://www.strava.com/heatmap)) with local GPX files
 
 Optimized for cycling activities :bicyclist:
 
@@ -11,8 +11,7 @@ Optimized for cycling activities :bicyclist:
 
 ## Usage
 
-* Download your GPX files from Strava to the `gpx` folder
-(see https://support.strava.com/hc/en-us/articles/216918437-Exporting-your-Data-and-Bulk-Export)
+* Download your GPX files from Strava to the `gpx` folder (https://support.strava.com/hc/en-us/articles/216918437-Exporting-your-Data-and-Bulk-Export)
 * Install dependencies from `requirements.txt`
 * Run `python strava_local_heatmap.py`
 
@@ -42,15 +41,15 @@ Note: `ZOOM` is OpenStreetMap zoom level (the number following `map=` in [www.op
 
 Example: `strava_local_heatmap.py --dir ~/GPX --year 2020 --filter *Ride*.gpx --zoom 13`
 
-Some info on the histogram equalization algorithm: [https://medium.com/strava-engineering/the-global-heatmap-now-6x-hotter](https://medium.com/strava-engineering/the-global-heatmap-now-6x-hotter-23fc01d301de)
+On the use of histogram equalization: [https://medium.com/strava-engineering/the-global-heatmap-now-6x-hotter](https://medium.com/strava-engineering/the-global-heatmap-now-6x-hotter-23fc01d301de)
 
-## Output
-**heatmap.png**|**orange.png**
+## Examples
+
+command|output
 --|--
-![heatmap.png](images/heatmap.png)|![orange.png](images/orange.png)
-
-**heatmap.csv**  
-See https://umap.openstreetmap.fr/en/map/demo-heatmap_261644 (from [@badele](https://github.com/badele))
+`strava_local_heatmap.py`|![heatmap.png](images/heatmap.png)
+`strava_local_heatmap.py --orange`|![orange.png](images/orange.png)
+`strava_local_heatmap.py --csv`|See https://umap.openstreetmap.fr/en/map/demo-heatmap_261644 (from [@badele](https://github.com/badele))
 
 ### Requirements
 
