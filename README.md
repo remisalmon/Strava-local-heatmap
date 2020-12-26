@@ -11,7 +11,7 @@ Optimized for cycling activities :bicyclist:
 
 ## Usage
 
-* Download your GPX files from Strava to the `gpx` folder (https://support.strava.com/hc/en-us/articles/216918437-Exporting-your-Data-and-Bulk-Export)
+* Download your GPX files to the `gpx` folder (https://support.strava.com/hc/en-us/articles/216918437-Exporting-your-Data-and-Bulk-Export)
 * Install dependencies from `requirements.txt`
 * Run `python strava_local_heatmap.py`
 
@@ -39,8 +39,6 @@ optional arguments:
 
 Note: `ZOOM` is OpenStreetMap zoom level (the number following `map=` in [www.openstreetmap.org/#map=](https://www.openstreetmap.org))
 
-Example: `strava_local_heatmap.py --dir ~/GPX --year 2020 --filter *Ride*.gpx --zoom 13`
-
 On the use of histogram equalization: [https://medium.com/strava-engineering/the-global-heatmap-now-6x-hotter](https://medium.com/strava-engineering/the-global-heatmap-now-6x-hotter-23fc01d301de)
 
 ## Examples
@@ -49,7 +47,7 @@ command|output
 --|--
 `strava_local_heatmap.py`|![heatmap.png](images/heatmap.png)
 `strava_local_heatmap.py --orange`|![orange.png](images/orange.png)
-`strava_local_heatmap.py --csv`|See https://umap.openstreetmap.fr/en/map/demo-heatmap_261644 (from [@badele](https://github.com/badele))
+`strava_local_heatmap.py --csv`|See https://umap.openstreetmap.fr/en/map/demo-heatmap_261644 (by [@badele](https://github.com/badele))
 
 ### Requirements
 

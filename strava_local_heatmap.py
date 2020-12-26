@@ -20,7 +20,6 @@
 
 # imports
 import os
-import re
 import glob
 import time
 import argparse
@@ -121,7 +120,7 @@ def download_tile(tile_url, tile_file):
     return True
 
 def main(args):
-    # read GPX data
+    # read GPX trackpoints
     gpx_files = glob.glob('{}/{}'.format(args.dir, args.filter))
 
     if not gpx_files:
@@ -135,14 +134,14 @@ def main(args):
         with open(gpx_file) as file:
             for line in file:
                 if '<time' in line:
-                    tmp = re.findall('[0-9]{4}', line)
+                    l = line.split('>')[1][:4]
 
-                    if args.year == 'all' or tmp[0] in args.year:
+                    if args.year == 'all' or l in args.year:
                         for line in file:
                             if '<trkpt' in line:
-                                tmp = re.findall('-?[0-9]*[.]?[0-9]+', line)
+                                l = line.split('"')
 
-                                lat_lon_data.append([float(tmp[0]), float(tmp[1])])
+                                lat_lon_data.append([float(l[1]), float(l[3])])
 
                     else:
                         break
@@ -153,7 +152,7 @@ def main(args):
         exit('ERROR no data matching {}/{}{}'.format(args.dir, args.filter,
                                                      ' with year {}'.format(args.year) if not args.year == 'all' else ''))
 
-    # crop data to bounding box
+    # crop to bounding box
     lat_bound_min, lat_bound_max, lon_bound_min, lon_bound_max = args.bounds
 
     lat_lon_data = lat_lon_data[np.logical_and(lat_lon_data[:, 0] > lat_bound_min, lat_lon_data[:, 0] < lat_bound_max), :]
@@ -195,8 +194,7 @@ def main(args):
         exit('ERROR zoom value too high, too many tiles to download')
 
     # download tiles
-    if not os.path.exists('tiles'):
-        os.makedirs('tiles')
+    os.makedirs('tiles', exist_ok = True)
 
     i = 0
     for x in range(x_tile_min, x_tile_max+1):
@@ -231,7 +229,6 @@ def main(args):
     if not args.orange:
         supertile = np.sum(supertile*[0.2126, 0.7152, 0.0722], axis = 2) # to grayscale
         supertile = 1.0-supertile # invert colors
-
         supertile = np.dstack((supertile, supertile, supertile)) # to rgb
 
     # fill trackpoints
@@ -239,12 +236,12 @@ def main(args):
 
     data = np.zeros(supertile.shape[:2])
 
-    for lat, lon in lat_lon_data:
-        x, y = deg2xy(lat, lon, zoom)
+    xy_data = deg2xy(lat_lon_data[:, 0], lat_lon_data[:, 1], zoom)
 
-        i = int(np.round((y-y_tile_min)*OSM_TILE_SIZE))
-        j = int(np.round((x-x_tile_min)*OSM_TILE_SIZE))
+    xy_data = np.array(xy_data).T
+    xy_data = np.round((xy_data-[x_tile_min, y_tile_min])*OSM_TILE_SIZE) # to supertile coordinates
 
+    for j, i in xy_data.astype(int):
         data[i-sigma_pixel:i+sigma_pixel, j-sigma_pixel:j+sigma_pixel] += 1.0
 
     # threshold to max accumulation of trackpoint
@@ -274,7 +271,7 @@ def main(args):
 
         data = (data-data.min())/(data.max()-data.min()) # normalize to [0,1]
 
-    # colorize data
+    # colorize
     if not args.orange:
         cmap = plt.get_cmap(PLT_COLORMAP)
 
