@@ -141,7 +141,7 @@ def main(args):
                             if '<trkpt' in line:
                                 l = line.split('"')
 
-                                lat_lon_data.append([float(l[1]), float(l[3])])
+                                lat_lon_data.append([float(l[3]), float(l[1])])
 
                     else:
                         break
