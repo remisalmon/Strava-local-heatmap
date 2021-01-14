@@ -105,15 +105,14 @@ def download_tile(tile_url, tile_file):
     request = urllib.request.Request(tile_url, headers = {'User-Agent':'Mozilla/5.0'})
 
     try:
-        response = urllib.request.urlopen(request)
+        with open urllib.request.urlopen(request) as response:
+            data = response.read()
 
     except urllib.error.URLError:
-        print('ERROR downloading tile from {} failed'.format(tile_url))
-
         return False
 
     with open(tile_file, 'wb') as file:
-        file.write(response.read())
+        file.write(data)
 
     time.sleep(0.1)
 
@@ -208,6 +207,8 @@ def main(args):
                 print('downloading tile {}/{}'.format(i, tile_count))
 
                 if not download_tile(tile_url, tile_file):
+                    print('ERROR downloading tile {} failed, using blank tile'.format(tile_url))
+
                     tile_image = np.ones((OSM_TILE_SIZE, OSM_TILE_SIZE, 3))
 
                     plt.imsave(tile_file, tile_image)
@@ -316,6 +317,8 @@ def main(args):
                         file.write('{},{},{}\n'.format(lat, lon, data[i,j]))
 
         print('Saved {}'.format(csv_file))
+
+    return
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description = 'Generate a PNG heatmap from local Strava GPX files',
