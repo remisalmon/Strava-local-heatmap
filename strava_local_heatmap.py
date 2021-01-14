@@ -195,30 +195,26 @@ def main(args):
     # download tiles
     os.makedirs('tiles', exist_ok = True)
 
-    i = 0
+    supertile = np.zeros(((y_tile_max-y_tile_min+1)*OSM_TILE_SIZE, (x_tile_max-x_tile_min+1)*OSM_TILE_SIZE, 3))
+
+    n = 0
     for x in range(x_tile_min, x_tile_max+1):
         for y in range(y_tile_min, y_tile_max+1):
+            n += 1
+
             tile_url = OSM_TILE_SERVER.format(zoom, x, y)
 
             tile_file = 'tiles/tile_{}_{}_{}.png'.format(zoom, x, y)
 
-            i += 1
             if not glob.glob(tile_file):
-                print('downloading tile {}/{}'.format(i, tile_count))
+                print('downloading tile {}/{}'.format(n, tile_count))
 
                 if not download_tile(tile_url, tile_file):
                     print('ERROR downloading tile {} failed, using blank tile'.format(tile_url))
 
-                    tile_image = np.ones((OSM_TILE_SIZE, OSM_TILE_SIZE, 3))
+                    tile = np.ones((OSM_TILE_SIZE, OSM_TILE_SIZE, 3))
 
-                    plt.imsave(tile_file, tile_image)
-
-    # create supertile
-    supertile = np.zeros(((y_tile_max-y_tile_min+1)*OSM_TILE_SIZE, (x_tile_max-x_tile_min+1)*OSM_TILE_SIZE, 3))
-
-    for x in range(x_tile_min, x_tile_max+1):
-        for y in range(y_tile_min, y_tile_max+1):
-            tile_file = 'tiles/tile_{}_{}_{}.png'.format(zoom, x, y)
+                    plt.imsave(tile_file, tile)
 
             tile = plt.imread(tile_file)
 
