@@ -105,7 +105,7 @@ def download_tile(tile_url, tile_file):
     request = urllib.request.Request(tile_url, headers = {'User-Agent':'Mozilla/5.0'})
 
     try:
-        with open urllib.request.urlopen(request) as response:
+        with urllib.request.urlopen(request) as response:
             data = response.read()
 
     except urllib.error.URLError:
@@ -135,7 +135,7 @@ def main(args):
                 if '<time' in line:
                     l = line.split('>')[1][:4]
 
-                    if args.year == 'all' or l in args.year:
+                    if not args.year or l in args.year:
                         for line in file:
                             if '<trkpt' in line:
                                 l = line.split('"')
@@ -149,7 +149,7 @@ def main(args):
 
     if lat_lon_data.size == 0:
         exit('ERROR no data matching {}/{}{}'.format(args.dir, args.filter,
-                                                     ' with year {}'.format(args.year) if not args.year == 'all' else ''))
+                                                     ' with year {}'.format(' '.join(args.year)) if args.year else ''))
 
     # crop to bounding box
     lat_bound_min, lat_bound_max, lon_bound_min, lon_bound_max = args.bounds
@@ -202,12 +202,12 @@ def main(args):
         for y in range(y_tile_min, y_tile_max+1):
             n += 1
 
-            tile_url = OSM_TILE_SERVER.format(zoom, x, y)
-
             tile_file = 'tiles/tile_{}_{}_{}.png'.format(zoom, x, y)
 
             if not glob.glob(tile_file):
                 print('downloading tile {}/{}'.format(n, tile_count))
+
+                tile_url = OSM_TILE_SERVER.format(zoom, x, y)
 
                 if not download_tile(tile_url, tile_file):
                     print('ERROR downloading tile {} failed, using blank tile'.format(tile_url))
@@ -324,7 +324,7 @@ if __name__ == '__main__':
                         help = 'GPX files directory  (default: gpx)')
     parser.add_argument('--filter', default = '*.gpx',
                         help = 'GPX files glob filter (default: *.gpx)')
-    parser.add_argument('--year', nargs = '+', default = 'all',
+    parser.add_argument('--year', nargs = '+', default = [],
                         help = 'GPX files year(s) filter (default: all)')
     parser.add_argument('--bounds', type = float, nargs = 4, metavar = 'BOUND', default = [-90.0, +90.0, -180.0, +180.0],
                         help = 'heatmap bounding box as lat_min, lat_max, lon_min, lon_max (default: -90 +90 -180 +180)')
