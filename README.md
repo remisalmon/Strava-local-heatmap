@@ -7,12 +7,12 @@ Optimized for cycling activities :bicyclist:
 ## Features
 
 * Minimal Python dependencies (`numpy`+`matplotlib`)
-* Fast (3x faster than `gpxpy.parse()`)
+* Fast (parse 3x faster than `gpxpy.parse`)
 
 ## Usage
 
 * Download your GPX files to the `gpx` folder (https://support.strava.com/hc/en-us/articles/216918437-Exporting-your-Data-and-Bulk-Export)
-* Install dependencies from `requirements.txt`
+* Install the python dependencies from `requirements.txt`
 * Run `python strava_local_heatmap.py`
 
 ### Command-line options
@@ -44,7 +44,7 @@ On the use of histogram equalization: [https://medium.com/strava-engineering/the
 ## Examples
 
 command|output
---|--
+-------|------
 `strava_local_heatmap.py`|![heatmap.png](images/heatmap.png)
 `strava_local_heatmap.py --orange`|![orange.png](images/orange.png)
 `strava_local_heatmap.py --csv`|See https://umap.openstreetmap.fr/en/map/demo-heatmap_261644 (by [@badele](https://github.com/badele))

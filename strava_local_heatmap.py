@@ -30,13 +30,15 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # globals
+HEATMAP_MAX_SIZE = (2160, 3840) # maximum heatmap size in pixel
+HEATMAP_MARGIN_SIZE = 32 # margin around heatmap trackpoints in pixel
+
 PLT_COLORMAP = 'hot' # matplotlib color map
-MAX_TILE_COUNT = 100 # maximum number of tiles to download
-MAX_HEATMAP_SIZE = (2160, 3840) # maximum heatmap size in pixel
 
 OSM_TILE_SERVER = 'https://maps.wikimedia.org/osm-intl/{}/{}/{}.png' # OSM tile url from https://wiki.openstreetmap.org/wiki/Tile_servers
 OSM_TILE_SIZE = 256 # OSM tile size in pixel
 OSM_MAX_ZOOM = 19 # OSM maximum zoom level
+OSM_MAX_TILE_COUNT = 100 # maximum number of tiles to download
 
 # functions
 def deg2xy(lat_deg, lon_deg, zoom):
@@ -179,8 +181,8 @@ def main(args):
             x_tile_min, y_tile_max = map(int, deg2xy(lat_min, lon_min, zoom))
             x_tile_max, y_tile_min = map(int, deg2xy(lat_max, lon_max, zoom))
 
-            if ((x_tile_max-x_tile_min+1)*OSM_TILE_SIZE <= MAX_HEATMAP_SIZE[0] and
-                (y_tile_max-y_tile_min+1)*OSM_TILE_SIZE <= MAX_HEATMAP_SIZE[1]):
+            if ((x_tile_max-x_tile_min+1)*OSM_TILE_SIZE <= HEATMAP_MAX_SIZE[0] and
+                (y_tile_max-y_tile_min+1)*OSM_TILE_SIZE <= HEATMAP_MAX_SIZE[1]):
                 break
 
             zoom -= 1
@@ -189,7 +191,7 @@ def main(args):
 
     tile_count = (x_tile_max-x_tile_min+1)*(y_tile_max-y_tile_min+1)
 
-    if tile_count > MAX_TILE_COUNT:
+    if tile_count > OSM_MAX_TILE_COUNT:
         exit('ERROR zoom value too high, too many tiles to download')
 
     # download tiles
@@ -236,9 +238,11 @@ def main(args):
     xy_data = deg2xy(lat_lon_data[:, 0], lat_lon_data[:, 1], zoom)
 
     xy_data = np.array(xy_data).T
-    xy_data = np.round((xy_data-[x_tile_min, y_tile_min])*OSM_TILE_SIZE) # to supertile coordinates
+    xy_data = np.round((xy_data-[x_tile_min, y_tile_min])*OSM_TILE_SIZE)
 
-    for j, i in xy_data.astype(int):
+    ij_data = np.flip(xy_data.astype(int), axis = 1) # to supertile coordinates
+
+    for i, j in ij_data:
         data[i-sigma_pixel:i+sigma_pixel, j-sigma_pixel:j+sigma_pixel] += 1.0
 
     # threshold to max accumulation of trackpoint
@@ -289,6 +293,13 @@ def main(args):
 
         for c in range(3):
             supertile[:, :, c] = (1.0-data)*supertile[:, :, c]+data*color[c]
+
+    # crop image
+    i_min, j_min = np.min(ij_data, axis = 0)
+    i_max, j_max = np.max(ij_data, axis = 0)
+
+    supertile = supertile[max(i_min-HEATMAP_MARGIN_SIZE, 0):min(i_max+HEATMAP_MARGIN_SIZE, supertile.shape[0]),
+                          max(j_min-HEATMAP_MARGIN_SIZE, 0):min(j_max+HEATMAP_MARGIN_SIZE, supertile.shape[1])]
 
     # save image
     plt.imsave(args.output, supertile)
