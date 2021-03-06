@@ -22,12 +22,14 @@
 import os
 import glob
 import time
-import argparse
-import urllib.error
-import urllib.request
 
 import numpy as np
 import matplotlib.pyplot as plt
+
+from typing import Tuple
+from urllib.error import URLError
+from urllib.request import Request, urlopen
+from argparse import ArgumentParser, Namespace
 
 # globals
 HEATMAP_MAX_SIZE = (2160, 3840) # maximum heatmap size in pixel
@@ -41,16 +43,10 @@ OSM_MAX_ZOOM = 19 # OSM maximum zoom level
 OSM_MAX_TILE_COUNT = 100 # maximum number of tiles to download
 
 # functions
-def deg2xy(lat_deg, lon_deg, zoom):
-    # returns OSM coordinates (x,y) from (lat,lon) in degree
-    # from https://wiki.openstreetmap.org/wiki/Slippy_map_tilenames
-    #
-    # input: lat_deg = float
-    #        long_deg = float
-    #        zoom = int
-    # output: x = float
-    #         y = float
+def deg2xy(lat_deg: float, lon_deg: float, zoom: int) -> Tuple[float, float]:
+    """Returns OSM coordinates (x,y) from (lat,lon) in degree"""
 
+    # from https://wiki.openstreetmap.org/wiki/Slippy_map_tilenames
     lat_rad = np.radians(lat_deg)
     n = 2.0**zoom
     x = (lon_deg+180.0)/360.0*n
@@ -58,16 +54,10 @@ def deg2xy(lat_deg, lon_deg, zoom):
 
     return x, y
 
-def xy2deg(x, y, zoom):
-    # returns (lat, lon) in degree from OSM coordinates (x,y)
-    # from https://wiki.openstreetmap.org/wiki/Slippy_map_tilenames
-    #
-    # input: x = float
-    #        y = float
-    #        zoom = int
-    # output: lat_deg = float
-    #         lon_deg = float
+def xy2deg(x: float, y: float, zoom: int) -> Tuple[float, float]:
+    """Returns (lat, lon) in degree from OSM coordinates (x,y)"""
 
+    # from https://wiki.openstreetmap.org/wiki/Slippy_map_tilenames
     n = 2.0**zoom
     lon_deg = x/n*360.0-180.0
     lat_rad = np.arctan(np.sinh(np.pi*(1.0-2.0*y/n)))
@@ -75,12 +65,8 @@ def xy2deg(x, y, zoom):
 
     return lat_deg, lon_deg
 
-def gaussian_filter(image, sigma):
-    # returns image filtered with a gaussian function of variance sigma**2
-    #
-    # input: image = numpy.ndarray
-    #        sigma = float
-    # output: image = numpy.ndarray
+def gaussian_filter(image: np.ndarray, sigma: float) -> np.ndarray:
+    """Returns image filtered with a gaussian function of variance sigma**2"""
 
     i, j = np.meshgrid(np.arange(image.shape[0]), np.arange(image.shape[1]), indexing = 'ij')
 
@@ -97,20 +83,16 @@ def gaussian_filter(image, sigma):
 
     return image
 
-def download_tile(tile_url, tile_file):
-    # download tile from url, save to file and wait 0.1s
-    #
-    # input: tile_url = str
-    #        tile_file = str
-    # output: bool
+def download_tile(tile_url: str, tile_file: str) -> bool:
+    """Download tile from url to file, wait 0.1s and return True (False) if (not) successful"""
 
-    request = urllib.request.Request(tile_url, headers = {'User-Agent':'Mozilla/5.0'})
+    request = Request(tile_url, headers = {'User-Agent':'Mozilla/5.0'})
 
     try:
-        with urllib.request.urlopen(request) as response:
+        with urlopen(request) as response:
             data = response.read()
 
-    except urllib.error.URLError:
+    except URLError:
         return False
 
     with open(tile_file, 'wb') as file:
@@ -120,7 +102,7 @@ def download_tile(tile_url, tile_file):
 
     return True
 
-def main(args):
+def main(args: Namespace) -> None:
     # read GPX trackpoints
     gpx_files = glob.glob('{}/{}'.format(args.dir, args.filter))
 
@@ -328,8 +310,8 @@ def main(args):
     return
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description = 'Generate a PNG heatmap from local Strava GPX files',
-                                     epilog = 'Report issues to https://github.com/remisalmon/Strava-local-heatmap/issues')
+    parser = ArgumentParser(description = 'Generate a PNG heatmap from local Strava GPX files',
+                            epilog = 'Report issues to https://github.com/remisalmon/Strava-local-heatmap/issues')
 
     parser.add_argument('--dir', default = 'gpx',
                         help = 'GPX files directory  (default: gpx)')
