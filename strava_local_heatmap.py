@@ -26,7 +26,6 @@ import time
 import numpy as np
 import matplotlib.pyplot as plt
 
-from typing import Tuple
 from urllib.error import URLError
 from urllib.request import Request, urlopen
 from argparse import ArgumentParser, Namespace
@@ -43,7 +42,7 @@ OSM_MAX_ZOOM = 19 # OSM maximum zoom level
 OSM_MAX_TILE_COUNT = 100 # maximum number of tiles to download
 
 # functions
-def deg2xy(lat_deg: float, lon_deg: float, zoom: int) -> Tuple[float, float]:
+def deg2xy(lat_deg: float, lon_deg: float, zoom: int) -> tuple[float, float]:
     """Returns OSM coordinates (x,y) from (lat,lon) in degree"""
 
     # from https://wiki.openstreetmap.org/wiki/Slippy_map_tilenames
@@ -54,7 +53,7 @@ def deg2xy(lat_deg: float, lon_deg: float, zoom: int) -> Tuple[float, float]:
 
     return x, y
 
-def xy2deg(x: float, y: float, zoom: int) -> Tuple[float, float]:
+def xy2deg(x: float, y: float, zoom: int) -> tuple[float, float]:
     """Returns (lat, lon) in degree from OSM coordinates (x,y)"""
 
     # from https://wiki.openstreetmap.org/wiki/Slippy_map_tilenames
@@ -68,13 +67,17 @@ def xy2deg(x: float, y: float, zoom: int) -> Tuple[float, float]:
 def gaussian_filter(image: np.ndarray, sigma: float) -> np.ndarray:
     """Returns image filtered with a gaussian function of variance sigma**2"""
 
-    i, j = np.meshgrid(np.arange(image.shape[0]), np.arange(image.shape[1]), indexing = 'ij')
+    i, j = np.meshgrid(np.arange(image.shape[0]),
+                       np.arange(image.shape[1]),
+                       indexing='ij')
 
-    mu = (int(image.shape[0]/2.0), int(image.shape[1]/2.0))
+    mu = (int(image.shape[0]/2.0),
+          int(image.shape[1]/2.0))
 
-    gaussian = 1.0/(2.0*np.pi*sigma*sigma)*np.exp(-0.5*(((i-mu[0])/sigma)**2+((j-mu[1])/sigma)**2))
+    gaussian = 1.0/(2.0*np.pi*sigma*sigma)*np.exp(-0.5*(((i-mu[0])/sigma)**2+\
+                                                        ((j-mu[1])/sigma)**2))
 
-    gaussian = np.roll(gaussian, (-mu[0], -mu[1]), axis = (0, 1))
+    gaussian = np.roll(gaussian, (-mu[0], -mu[1]), axis=(0, 1))
 
     image_fft = np.fft.rfft2(image)
     gaussian_fft = np.fft.rfft2(gaussian)
@@ -86,7 +89,7 @@ def gaussian_filter(image: np.ndarray, sigma: float) -> np.ndarray:
 def download_tile(tile_url: str, tile_file: str) -> bool:
     """Download tile from url to file, wait 0.1s and return True (False) if (not) successful"""
 
-    request = Request(tile_url, headers = {'User-Agent':'Mozilla/5.0'})
+    request = Request(tile_url, headers={'User-Agent':'Mozilla/5.0'})
 
     try:
         with urlopen(request) as response:
@@ -104,10 +107,12 @@ def download_tile(tile_url: str, tile_file: str) -> bool:
 
 def main(args: Namespace) -> None:
     # read GPX trackpoints
-    gpx_files = glob.glob('{}/{}'.format(args.dir, args.filter))
+    gpx_files = glob.glob('{}/{}'.format(args.dir,
+                                         args.filter))
 
     if not gpx_files:
-        exit('ERROR no data matching {}/{}'.format(args.dir, args.filter))
+        exit('ERROR no data matching {}/{}'.format(args.dir,
+                                                   args.filter))
 
     lat_lon_data = []
 
@@ -124,7 +129,8 @@ def main(args: Namespace) -> None:
                             if '<trkpt' in line:
                                 l = line.split('"')
 
-                                lat_lon_data.append([float(l[1]), float(l[3])])
+                                lat_lon_data.append([float(l[1]),
+                                                     float(l[3])])
 
                     else:
                         break
@@ -132,14 +138,17 @@ def main(args: Namespace) -> None:
     lat_lon_data = np.array(lat_lon_data)
 
     if lat_lon_data.size == 0:
-        exit('ERROR no data matching {}/{}{}'.format(args.dir, args.filter,
+        exit('ERROR no data matching {}/{}{}'.format(args.dir,
+                                                     args.filter,
                                                      ' with year {}'.format(' '.join(args.year)) if args.year else ''))
 
     # crop to bounding box
     lat_bound_min, lat_bound_max, lon_bound_min, lon_bound_max = args.bounds
 
-    lat_lon_data = lat_lon_data[np.logical_and(lat_lon_data[:, 0] > lat_bound_min, lat_lon_data[:, 0] < lat_bound_max), :]
-    lat_lon_data = lat_lon_data[np.logical_and(lat_lon_data[:, 1] > lon_bound_min, lat_lon_data[:, 1] < lon_bound_max), :]
+    lat_lon_data = lat_lon_data[np.logical_and(lat_lon_data[:, 0] > lat_bound_min,
+                                               lat_lon_data[:, 0] < lat_bound_max), :]
+    lat_lon_data = lat_lon_data[np.logical_and(lat_lon_data[:, 1] > lon_bound_min,
+                                               lat_lon_data[:, 1] < lon_bound_max), :]
 
     if lat_lon_data.size == 0:
         exit('ERROR no data matching {}/{} with bounds {}'.format(args.dir, args.filter, args.bounds))
@@ -147,8 +156,8 @@ def main(args: Namespace) -> None:
     print('Read {} trackpoints'.format(lat_lon_data.shape[0]))
 
     # find tiles coordinates
-    lat_min, lon_min = np.min(lat_lon_data, axis = 0)
-    lat_max, lon_max = np.max(lat_lon_data, axis = 0)
+    lat_min, lon_min = np.min(lat_lon_data, axis=0)
+    lat_max, lon_max = np.max(lat_lon_data, axis=0)
 
     if args.zoom > -1:
         zoom = min(args.zoom, OSM_MAX_ZOOM)
@@ -177,9 +186,10 @@ def main(args: Namespace) -> None:
         exit('ERROR zoom value too high, too many tiles to download')
 
     # download tiles
-    os.makedirs('tiles', exist_ok = True)
+    os.makedirs('tiles', exist_ok=True)
 
-    supertile = np.zeros(((y_tile_max-y_tile_min+1)*OSM_TILE_SIZE, (x_tile_max-x_tile_min+1)*OSM_TILE_SIZE, 3))
+    supertile = np.zeros(((y_tile_max-y_tile_min+1)*OSM_TILE_SIZE,
+                          (x_tile_max-x_tile_min+1)*OSM_TILE_SIZE, 3))
 
     n = 0
     for x in range(x_tile_min, x_tile_max+1):
@@ -196,7 +206,8 @@ def main(args: Namespace) -> None:
                 if not download_tile(tile_url, tile_file):
                     print('ERROR downloading tile {} failed, using blank tile'.format(tile_url))
 
-                    tile = np.ones((OSM_TILE_SIZE, OSM_TILE_SIZE, 3))
+                    tile = np.ones((OSM_TILE_SIZE,
+                                    OSM_TILE_SIZE, 3))
 
                     plt.imsave(tile_file, tile)
 
@@ -205,10 +216,11 @@ def main(args: Namespace) -> None:
             i = y-y_tile_min
             j = x-x_tile_min
 
-            supertile[i*OSM_TILE_SIZE:(i+1)*OSM_TILE_SIZE, j*OSM_TILE_SIZE:(j+1)*OSM_TILE_SIZE, :] = tile[:, :, :3]
+            supertile[i*OSM_TILE_SIZE:(i+1)*OSM_TILE_SIZE,
+                      j*OSM_TILE_SIZE:(j+1)*OSM_TILE_SIZE, :] = tile[:, :, :3]
 
     if not args.orange:
-        supertile = np.sum(supertile*[0.2126, 0.7152, 0.0722], axis = 2) # to grayscale
+        supertile = np.sum(supertile*[0.2126, 0.7152, 0.0722], axis=2) # to grayscale
         supertile = 1.0-supertile # invert colors
         supertile = np.dstack((supertile, supertile, supertile)) # to rgb
 
@@ -222,7 +234,7 @@ def main(args: Namespace) -> None:
     xy_data = np.array(xy_data).T
     xy_data = np.round((xy_data-[x_tile_min, y_tile_min])*OSM_TILE_SIZE)
 
-    ij_data = np.flip(xy_data.astype(int), axis = 1) # to supertile coordinates
+    ij_data = np.flip(xy_data.astype(int), axis=1) # to supertile coordinates
 
     for i, j in ij_data:
         data[i-sigma_pixel:i+sigma_pixel, j-sigma_pixel:j+sigma_pixel] += 1.0
@@ -242,7 +254,7 @@ def main(args: Namespace) -> None:
 
     # equalize histogram and compute kernel density estimation
     if not args.orange:
-        data_hist, _ = np.histogram(data, bins = int(m+1))
+        data_hist, _ = np.histogram(data, bins=int(m+1))
 
         data_hist = np.cumsum(data_hist)/data.size # normalized cumulated histogram
 
@@ -265,7 +277,7 @@ def main(args: Namespace) -> None:
             supertile[:, :, c] = (1.0-data_color[:, :, c])*supertile[:, :, c]+data_color[:, :, c]
 
     else:
-        color = np.array([255, 82, 0], dtype = float)/255 # orange
+        color = np.array([255, 82, 0], dtype=float)/255 # orange
 
         for c in range(3):
             supertile[:, :, c] = np.minimum(supertile[:, :, c]+gaussian_filter(data, 1.0), 1.0) # white
@@ -277,8 +289,8 @@ def main(args: Namespace) -> None:
             supertile[:, :, c] = (1.0-data)*supertile[:, :, c]+data*color[c]
 
     # crop image
-    i_min, j_min = np.min(ij_data, axis = 0)
-    i_max, j_max = np.max(ij_data, axis = 0)
+    i_min, j_min = np.min(ij_data, axis=0)
+    i_max, j_max = np.max(ij_data, axis=0)
 
     supertile = supertile[max(i_min-HEATMAP_MARGIN_SIZE, 0):min(i_max+HEATMAP_MARGIN_SIZE, supertile.shape[0]),
                           max(j_min-HEATMAP_MARGIN_SIZE, 0):min(j_max+HEATMAP_MARGIN_SIZE, supertile.shape[1])]
@@ -293,7 +305,7 @@ def main(args: Namespace) -> None:
         csv_file = '{}.csv'.format(os.path.splitext(args.output)[0])
 
         with open(csv_file, 'w') as file:
-            file.write('latitude,longitude,intensity\n') # header
+            file.write('latitude,longitude,intensity\n')
 
             for i in range(data.shape[0]):
                 for j in range(data.shape[1]):
@@ -310,27 +322,27 @@ def main(args: Namespace) -> None:
     return
 
 if __name__ == '__main__':
-    parser = ArgumentParser(description = 'Generate a PNG heatmap from local Strava GPX files',
-                            epilog = 'Report issues to https://github.com/remisalmon/Strava-local-heatmap/issues')
+    parser = ArgumentParser(description='Generate a PNG heatmap from local Strava GPX files',
+                            epilog='Report issues to https://github.com/remisalmon/Strava-local-heatmap/issues')
 
-    parser.add_argument('--dir', default = 'gpx',
-                        help = 'GPX files directory  (default: gpx)')
-    parser.add_argument('--filter', default = '*.gpx',
-                        help = 'GPX files glob filter (default: *.gpx)')
-    parser.add_argument('--year', nargs = '+', default = [],
-                        help = 'GPX files year(s) filter (default: all)')
-    parser.add_argument('--bounds', type = float, nargs = 4, metavar = 'BOUND', default = [-90.0, +90.0, -180.0, +180.0],
-                        help = 'heatmap bounding box as lat_min, lat_max, lon_min, lon_max (default: -90 +90 -180 +180)')
-    parser.add_argument('--output', default = 'heatmap.png',
-                        help = 'heatmap name (default: heatmap.png)')
-    parser.add_argument('--zoom', type = int, default = -1,
-                        help = 'heatmap zoom level 0-19 or -1 for auto (default: -1)')
-    parser.add_argument('--sigma', type = int, default = 1,
-                        help = 'heatmap Gaussian kernel sigma in pixel (default: 1)')
-    parser.add_argument('--orange', action = 'store_true',
-                        help = 'not a heatmap...')
-    parser.add_argument('--csv', action = 'store_true',
-                        help = 'also save the heatmap data to a CSV file')
+    parser.add_argument('--dir', default='gpx',
+                        help='GPX files directory  (default: gpx)')
+    parser.add_argument('--filter', default='*.gpx',
+                        help='GPX files glob filter (default: *.gpx)')
+    parser.add_argument('--year', nargs='+', default=[],
+                        help='GPX files year(s) filter (default: all)')
+    parser.add_argument('--bounds', type=float, nargs=4, metavar='BOUND', default=[-90.0, +90.0, -180.0, +180.0],
+                        help='heatmap bounding box as lat_min, lat_max, lon_min, lon_max (default: -90 +90 -180 +180)')
+    parser.add_argument('--output', default='heatmap.png',
+                        help='heatmap name (default: heatmap.png)')
+    parser.add_argument('--zoom', type=int, default=-1,
+                        help='heatmap zoom level 0-19 or -1 for auto (default: -1)')
+    parser.add_argument('--sigma', type=int, default=1,
+                        help='heatmap Gaussian kernel sigma in pixel (default: 1)')
+    parser.add_argument('--orange', action='store_true',
+                        help='not a heatmap...')
+    parser.add_argument('--csv', action='store_true',
+                        help='also save the heatmap data to a CSV file')
 
     args = parser.parse_args()
 

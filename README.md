@@ -52,8 +52,9 @@ command|output
 ### Requirements
 
 ```
-numpy==1.19.4
-matplotlib==3.3.3
+python>=3.9
+numpy>=1.20
+matplotlib>=3.4
 ```
 
 ### Other requirements
