@@ -119,7 +119,7 @@ def main(args: Namespace) -> None:
     for gpx_file in gpx_files:
         print('Reading {}'.format(os.path.basename(gpx_file)))
 
-        with open(gpx_file) as file:
+        with open(gpx_file, encoding='utf-8') as file:
             for line in file:
                 if '<time' in line:
                     l = line.split('>')[1][:4]
