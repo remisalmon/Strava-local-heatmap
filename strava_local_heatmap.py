@@ -245,7 +245,7 @@ def main(args: Namespace) -> None:
 
         # trackpoint max accumulation per pixel = 1/5 (trackpoint/meter) * res_pixel (meter/pixel) * activities
         # (Strava records trackpoints every 5 meters in average for cycling activites)
-        m = np.round((1.0/5.0)*res_pixel*len(gpx_files))
+        m = max(1.0, np.round((1.0/5.0)*res_pixel*len(gpx_files)))
 
     else:
         m = 1.0
