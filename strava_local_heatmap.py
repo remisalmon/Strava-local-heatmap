@@ -118,6 +118,17 @@ def main(args: Namespace) -> None:
 
     lat_lon_data = []
 
+    # converting files
+    for gpx_file in gpx_files:
+        print('Converting {}'.format(os.path.basename(gpx_file)))
+        with open(gpx_file, encoding='utf-8') as file:
+            buffer = file.read()
+            buffer = buffer.replace("><", ">\n<")
+            buffer = buffer.replace("\t", "")
+        with open(gpx_file, "w", encoding='utf-8') as file:
+            file.write(buffer)
+
+    # processing files
     for gpx_file in gpx_files:
         print('Reading {}'.format(os.path.basename(gpx_file)))
 
