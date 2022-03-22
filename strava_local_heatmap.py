@@ -109,8 +109,7 @@ def download_tile(tile_url: str, tile_file: str) -> bool:
 
 def main(args: Namespace) -> None:
     # read GPX trackpoints
-    gpx_files = glob.glob('{}/{}'.format(args.dir,
-                                         args.filter))
+    gpx_files = glob.glob('{}/**/{}'.format(args.dir,args.filter), recursive=True)
 
     if not gpx_files:
         exit('ERROR no data matching {}/{}'.format(args.dir,
