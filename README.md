@@ -8,6 +8,7 @@ Optimized for cycling activities :bicyclist:
 
 * Minimal Python dependencies (`numpy`+`matplotlib`)
 * Fast (parse 3x faster than `gpxpy.parse`)
+* Supports non Strava GPX tracks
 
 ## Usage
 
@@ -52,7 +53,7 @@ command|output
 ### Requirements
 
 ```
-python>=3.9
+python>=3.8
 numpy>=1.20
 matplotlib>=3.4
 ```
