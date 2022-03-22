@@ -31,6 +31,8 @@ from urllib.request import Request, urlopen
 from argparse import ArgumentParser, Namespace
 
 # globals
+from typing import Tuple
+
 HEATMAP_MAX_SIZE = (2160, 3840) # maximum heatmap size in pixel
 HEATMAP_MARGIN_SIZE = 32 # margin around heatmap trackpoints in pixel
 
@@ -42,7 +44,7 @@ OSM_MAX_ZOOM = 19 # OSM maximum zoom level
 OSM_MAX_TILE_COUNT = 100 # maximum number of tiles to download
 
 # functions
-def deg2xy(lat_deg: float, lon_deg: float, zoom: int) -> tuple[float, float]:
+def deg2xy(lat_deg: float, lon_deg: float, zoom: int) -> Tuple[float, float]:
     """Returns OSM coordinates (x,y) from (lat,lon) in degree"""
 
     # from https://wiki.openstreetmap.org/wiki/Slippy_map_tilenames
@@ -53,7 +55,7 @@ def deg2xy(lat_deg: float, lon_deg: float, zoom: int) -> tuple[float, float]:
 
     return x, y
 
-def xy2deg(x: float, y: float, zoom: int) -> tuple[float, float]:
+def xy2deg(x: float, y: float, zoom: int) -> Tuple[float, float]:
     """Returns (lat, lon) in degree from OSM coordinates (x,y)"""
 
     # from https://wiki.openstreetmap.org/wiki/Slippy_map_tilenames
