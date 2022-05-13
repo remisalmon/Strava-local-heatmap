@@ -105,6 +105,40 @@ def download_tile(tile_url: str, tile_file: str) -> bool:
 
     return True
 
+class Points:
+    files_used = 0
+    data = []
+
+def read_data_from_gpx(gpx_files: list[str], year_filter: int) -> Points:
+    """Reads the data from gpx files and tracks used file count"""
+
+    points = Points()
+
+    for gpx_file in gpx_files:
+        print('Reading {}'.format(os.path.basename(gpx_file)))
+        file_used_in_points = 0
+
+        with open(gpx_file, encoding='utf-8') as file:
+            for line in file:
+                if '<time' in line:
+                    l = line.split('>')[1][:4]
+
+                    if not args.year or l in args.year:
+                        if not file_used_in_points:
+                            file_used_in_points = 1
+                            points.files_used += 1
+
+                        for line in file:
+                            if '<trkpt' in line:
+                                l = line.split('"')
+
+                                points.data.append([float(l[1]),
+                                                     float(l[3])])
+                    else:
+                        break
+
+    return points 
+
 def main(args: Namespace) -> None:
     # read GPX trackpoints
     gpx_files = glob.glob('{}/{}'.format(args.dir,
@@ -114,28 +148,8 @@ def main(args: Namespace) -> None:
         exit('ERROR no data matching {}/{}'.format(args.dir,
                                                    args.filter))
 
-    lat_lon_data = []
-
-    for gpx_file in gpx_files:
-        print('Reading {}'.format(os.path.basename(gpx_file)))
-
-        with open(gpx_file, encoding='utf-8') as file:
-            for line in file:
-                if '<time' in line:
-                    l = line.split('>')[1][:4]
-
-                    if not args.year or l in args.year:
-                        for line in file:
-                            if '<trkpt' in line:
-                                l = line.split('"')
-
-                                lat_lon_data.append([float(l[1]),
-                                                     float(l[3])])
-
-                    else:
-                        break
-
-    lat_lon_data = np.array(lat_lon_data)
+    points = read_data_from_gpx(gpx_files, args.year)
+    lat_lon_data = np.array(points.data)
 
     if lat_lon_data.size == 0:
         exit('ERROR no data matching {}/{}{}'.format(args.dir,
@@ -245,7 +259,7 @@ def main(args: Namespace) -> None:
 
         # trackpoint max accumulation per pixel = 1/5 (trackpoint/meter) * res_pixel (meter/pixel) * activities
         # (Strava records trackpoints every 5 meters in average for cycling activites)
-        m = max(1.0, np.round((1.0/5.0)*res_pixel*len(gpx_files)))
+        m = max(1.0, np.round((1.0/5.0)*res_pixel*points.files_used))
 
     else:
         m = 1.0
