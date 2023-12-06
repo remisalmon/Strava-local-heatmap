@@ -49,18 +49,10 @@ command|output
 `strava_local_heatmap.py --orange`|![orange.png](images/orange.png)
 `strava_local_heatmap.py --csv`|See https://umap.openstreetmap.fr/en/map/demo-heatmap_261644 (by [@badele](https://github.com/badele))
 
-### Requirements
-
-```
-python>=3.9
-numpy>=1.20
-matplotlib>=3.4
-```
-
-### Other requirements
-
-Arch Linux: `sudo pacman -S tk` (see [here](https://github.com/remisalmon/strava-local-heatmap/pull/3#issuecomment-443541311))
-
 ## Projects using strava_local_heatmap.py
 
 [JeSuisUnDesDeux](https://gitlab.com/JeSuisUnDesDeux/jesuisundesdeux/tree/master/datas/traces)
+
+## Troubleshooting
+
+Arch Linux: `sudo pacman -S tk` (see [here](https://github.com/remisalmon/strava-local-heatmap/pull/3#issuecomment-443541311))

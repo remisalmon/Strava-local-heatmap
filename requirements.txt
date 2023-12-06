@@ -1,2 +1,2 @@
-numpy>=1.20
-matplotlib>=3.4
+numpy>=1.26.2,<1.30
+matplotlib>=3.8.2,<4
