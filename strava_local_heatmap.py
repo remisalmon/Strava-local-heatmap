@@ -1,23 +1,3 @@
-# Copyright (c) 2018 Remi Salmon
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
-
 # imports
 import os
 import glob
@@ -85,25 +65,6 @@ def gaussian_filter(image: np.ndarray, sigma: float) -> np.ndarray:
     image = np.fft.irfft2(image_fft*gaussian_fft)
 
     return image
-
-def download_tile(tile_url: str, tile_file: str) -> bool:
-    """Download tile from url to file, wait 0.1s and return True (False) if (not) successful"""
-
-    request = Request(tile_url, headers={'User-Agent':'Mozilla/5.0'})
-
-    try:
-        with urlopen(request) as response:
-            data = response.read()
-
-    except URLError:
-        return False
-
-    with open(tile_file, 'wb') as file:
-        file.write(data)
-
-    time.sleep(0.1)
-
-    return True
 
 def main(args: Namespace) -> None:
     # read GPX trackpoints
@@ -201,17 +162,32 @@ def main(args: Namespace) -> None:
             if not glob.glob(tile_file):
                 print('downloading tile {}/{}'.format(n, tile_count))
 
-                tile_url = OSM_TILE_SERVER.format(zoom, x, y)
+                url = OSM_TILE_SERVER.format(zoom, x, y)
 
-                if not download_tile(tile_url, tile_file):
-                    print('ERROR downloading tile {} failed, using blank tile'.format(tile_url))
+                request = Request(url, headers={'User-Agent': 'Strava-local-heatmap/master'})
+
+                try:
+                    with urlopen(request, timeout=1) as response:
+                        data = response.read()
+
+                    with open(tile_file, 'wb') as file:
+                        file.write(data)
+
+                    tile = plt.imread(tile_file)
+
+                except URLError as e:
+                    print('ERROR downloading failed, using blank tile: {}'.format(e))
 
                     tile = np.ones((OSM_TILE_SIZE,
                                     OSM_TILE_SIZE, 3))
 
-                    plt.imsave(tile_file, tile)
+                finally:
+                    time.sleep(0.1)
 
-            tile = plt.imread(tile_file)
+            else:
+                print('reading local tile {}/{}'.format(n, tile_count))
+
+                tile = plt.imread(tile_file)
 
             i = y-y_tile_min
             j = x-x_tile_min
