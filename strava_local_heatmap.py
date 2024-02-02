@@ -1,23 +1,3 @@
-# Copyright (c) 2018 Remi Salmon
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
-
 # imports
 import os
 import glob
@@ -36,7 +16,7 @@ HEATMAP_MARGIN_SIZE = 32 # margin around heatmap trackpoints in pixel
 
 PLT_COLORMAP = 'hot' # matplotlib color map
 
-OSM_TILE_SERVER = 'https://maps.wikimedia.org/osm-intl/{}/{}/{}.png' # OSM tile url from https://wiki.openstreetmap.org/wiki/Tile_servers
+OSM_TILE_SERVER = 'https://tile.openstreetmap.org/{}/{}/{}.png' # OSM tile url from https://wiki.openstreetmap.org/wiki/Raster_tile_providers
 OSM_TILE_SIZE = 256 # OSM tile size in pixel
 OSM_MAX_ZOOM = 19 # OSM maximum zoom level
 OSM_MAX_TILE_COUNT = 100 # maximum number of tiles to download
@@ -86,59 +66,6 @@ def gaussian_filter(image: np.ndarray, sigma: float) -> np.ndarray:
 
     return image
 
-def download_tile(tile_url: str, tile_file: str) -> bool:
-    """Download tile from url to file, wait 0.1s and return True (False) if (not) successful"""
-
-    request = Request(tile_url, headers={'User-Agent':'Mozilla/5.0'})
-
-    try:
-        with urlopen(request) as response:
-            data = response.read()
-
-    except URLError:
-        return False
-
-    with open(tile_file, 'wb') as file:
-        file.write(data)
-
-    time.sleep(0.1)
-
-    return True
-
-class Points:
-    files_used = 0
-    data = []
-
-def read_data_from_gpx(gpx_files: list[str], year_filter: int) -> Points:
-    """Reads the data from gpx files and tracks used file count"""
-
-    points = Points()
-
-    for gpx_file in gpx_files:
-        print('Reading {}'.format(os.path.basename(gpx_file)))
-        file_used_in_points = 0
-
-        with open(gpx_file, encoding='utf-8') as file:
-            for line in file:
-                if '<time' in line:
-                    l = line.split('>')[1][:4]
-
-                    if not args.year or l in args.year:
-                        if not file_used_in_points:
-                            file_used_in_points = 1
-                            points.files_used += 1
-
-                        for line in file:
-                            if '<trkpt' in line:
-                                l = line.split('"')
-
-                                points.data.append([float(l[1]),
-                                                     float(l[3])])
-                    else:
-                        break
-
-    return points 
-
 def main(args: Namespace) -> None:
     # read GPX trackpoints
     gpx_files = glob.glob('{}/{}'.format(args.dir,
@@ -148,8 +75,32 @@ def main(args: Namespace) -> None:
         exit('ERROR no data matching {}/{}'.format(args.dir,
                                                    args.filter))
 
-    points = read_data_from_gpx(gpx_files, args.year)
-    lat_lon_data = np.array(points.data)
+    gpx_files_count = 0
+
+    lat_lon_data = []
+
+    for gpx_file in gpx_files:
+        print('Reading {}'.format(os.path.basename(gpx_file)))
+
+        with open(gpx_file, encoding='utf-8') as file:
+            for line in file:
+                if '<time' in line:
+                    l = line.split('>')[1][:4]
+
+                    if not args.year or l in args.year:
+                        gpx_files_count += 1
+
+                        for line in file:
+                            if '<trkpt' in line:
+                                l = line.split('"')
+
+                                lat_lon_data.append([float(l[1]),
+                                                     float(l[3])])
+
+                    else:
+                        break
+
+    lat_lon_data = np.array(lat_lon_data)
 
     if lat_lon_data.size == 0:
         exit('ERROR no data matching {}/{}{}'.format(args.dir,
@@ -215,17 +166,32 @@ def main(args: Namespace) -> None:
             if not glob.glob(tile_file):
                 print('downloading tile {}/{}'.format(n, tile_count))
 
-                tile_url = OSM_TILE_SERVER.format(zoom, x, y)
+                url = OSM_TILE_SERVER.format(zoom, x, y)
 
-                if not download_tile(tile_url, tile_file):
-                    print('ERROR downloading tile {} failed, using blank tile'.format(tile_url))
+                request = Request(url, headers={'User-Agent': 'Strava-local-heatmap/master'})
+
+                try:
+                    with urlopen(request, timeout=1) as response:
+                        data = response.read()
+
+                    with open(tile_file, 'wb') as file:
+                        file.write(data)
+
+                    tile = plt.imread(tile_file)
+
+                except URLError as e:
+                    print('ERROR downloading failed, using blank tile: {}'.format(e))
 
                     tile = np.ones((OSM_TILE_SIZE,
                                     OSM_TILE_SIZE, 3))
 
-                    plt.imsave(tile_file, tile)
+                finally:
+                    time.sleep(0.1)
 
-            tile = plt.imread(tile_file)
+            else:
+                print('reading local tile {}/{}'.format(n, tile_count))
+
+                tile = plt.imread(tile_file)
 
             i = y-y_tile_min
             j = x-x_tile_min
@@ -259,7 +225,7 @@ def main(args: Namespace) -> None:
 
         # trackpoint max accumulation per pixel = 1/5 (trackpoint/meter) * res_pixel (meter/pixel) * activities
         # (Strava records trackpoints every 5 meters in average for cycling activites)
-        m = max(1.0, np.round((1.0/5.0)*res_pixel*points.files_used))
+        m = max(1.0, np.round((1.0/5.0)*res_pixel*gpx_files_count))
 
     else:
         m = 1.0
