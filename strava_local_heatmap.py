@@ -261,6 +261,7 @@ def main(args: Namespace) -> None:
 
         for c in range(3):
             supertile[:, :, c] = np.minimum(supertile[:, :, c]+gaussian_filter(data, 1.0), 1.0) # white
+            supertile[:, :, c] = np.maximum(supertile[:, :, c], 0.0)
 
         data = gaussian_filter(data, 0.5)
         data = (data-data.min())/(data.max()-data.min())
