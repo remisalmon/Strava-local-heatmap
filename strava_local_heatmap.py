@@ -75,6 +75,8 @@ def main(args: Namespace) -> None:
         exit('ERROR no data matching {}/{}'.format(args.dir,
                                                    args.filter))
 
+    gpx_files_count = 0
+
     lat_lon_data = []
 
     for gpx_file in gpx_files:
@@ -86,6 +88,8 @@ def main(args: Namespace) -> None:
                     l = line.split('>')[1][:4]
 
                     if not args.year or l in args.year:
+                        gpx_files_count += 1
+
                         for line in file:
                             if '<trkpt' in line:
                                 l = line.split('"')
@@ -221,7 +225,7 @@ def main(args: Namespace) -> None:
 
         # trackpoint max accumulation per pixel = 1/5 (trackpoint/meter) * res_pixel (meter/pixel) * activities
         # (Strava records trackpoints every 5 meters in average for cycling activites)
-        m = max(1.0, np.round((1.0/5.0)*res_pixel*len(gpx_files)))
+        m = max(1.0, np.round((1.0/5.0)*res_pixel*gpx_files_count))
 
     else:
         m = 1.0
